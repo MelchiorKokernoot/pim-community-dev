@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Akeneo\Test\Integration;
 
 use Akeneo\Bundle\BatchBundle\Command\BatchCommand;
+use Akeneo\Component\Batch\Job\BatchStatus;
+use Akeneo\Component\Batch\Model\JobExecution;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -202,5 +204,80 @@ class JobLauncher
         if (BatchCommand::EXIT_SUCCESS_CODE !== $exitCode) {
             throw new \Exception(sprintf('Export failed, "%s".', $output->fetch()));
         }
+    }
+
+    /**
+     * Wait until a job has been finished.
+     *
+     * @param JobExecution $jobExecution
+     *
+     * @throws \RuntimeException
+     */
+    public function waitCompleteJobExecution(JobExecution $jobExecution): void
+    {
+        $timeout = 0;
+        $isCompleted = false;
+
+        $connection = $this->get('doctrine.orm.default_entity_manager')->getConnection();
+        $stmt = $connection->prepare('SELECT status from akeneo_batch_job_execution where id = :id');
+
+        while (!$isCompleted) {
+            if ($timeout > 30) {
+                throw new \RuntimeException(sprintf('Timeout: job execution "%s" is not complete.', $jobExecution->getId()));
+            }
+            $stmt->bindValue('id', $jobExecution->getId());
+            $stmt->execute();
+            $result = $stmt->fetch();
+
+            $isCompleted = isset($result['status']) && BatchStatus::COMPLETED === (int) $result['status'];
+
+            $timeout++;
+
+            sleep(1);
+        }
+    }
+
+    /**
+     * Launch the daemon command to consume and launch one job execution.
+     *
+     * @return BufferedOutput
+     */
+    public function launchConsumerOnce(): BufferedOutput
+    {
+        $application = new Application($this->kernel);
+        $application->setAutoExit(false);
+
+        $arrayInput = [
+            'command'  => 'akeneo:batch:job-queue-consumer',
+            'consumer_name' => 'consumer',
+            '--run-once' => true,
+        ];
+
+        $input = new ArrayInput($arrayInput);
+        $output = new BufferedOutput();
+        $application->run($input, $output);
+
+        return $output;
+    }
+
+    /**
+     * Launch the daemon command to consume and launch one job execution, in a detached process in background.
+     *
+     * @return Process
+     */
+    public function launchConsumerOnceInBackground(): Process
+    {
+        $pathFinder = new PhpExecutableFinder();
+        $command = sprintf(
+            '%s %s/console akeneo:batch:job-queue-consumer consumer --env=%s --run-once',
+            $pathFinder->find(),
+            sprintf('%s/../bin', $this->kernel->getRootDir()),
+            $this->kernel->getEnvironment()
+        );
+
+        $process = new Process($command);
+        $process->start();
+
+        return $process;
     }
 }
