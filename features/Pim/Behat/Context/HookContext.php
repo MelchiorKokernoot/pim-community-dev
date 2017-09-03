@@ -12,6 +12,9 @@ use Context\FeatureContext;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\ProcessBuilder;
 use WebDriver\Exception\UnexpectedAlertOpen;
 
 /**
@@ -27,6 +30,9 @@ class HookContext extends PimContext
 
     /** @var int */
     protected $windowHeight;
+
+    /** @var Process */
+    protected $jobConsumerProcess;
 
     /**
      * @param string $mainContextClass
@@ -73,6 +79,34 @@ class HookContext extends PimContext
     {
         $aclManager = $this->getService('oro_security.acl.manager');
         $aclManager->clearCache();
+    }
+
+    /**
+     * @BeforeScenario
+     */
+    public function launchJobConsumer()
+    {
+        $pathFinder = new PhpExecutableFinder();
+        $console = sprintf('%s/bin/console', $this->getParameter('kernel.project_dir'));
+
+        $processBuilder = ProcessBuilder::create();
+        $processBuilder
+            ->setPrefix([$pathFinder->find(), $console, 'akeneo:batch:job-queue-consumer'])
+            ->setArguments(['behat_consumer', '--env=behat'])
+            ->setTimeout(null);
+
+        $process = $processBuilder->getProcess();
+        $process->start();
+
+        $this->jobConsumerProcess = $process;
+    }
+
+    /**
+     * @AfterScenario
+     */
+    public function stopJobConsumer()
+    {
+        $this->jobConsumerProcess->stop();
     }
 
     /**
