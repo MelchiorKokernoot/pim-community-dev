@@ -6,7 +6,7 @@ use Akeneo\Component\Console\CommandLauncher;
 use Akeneo\Component\StorageUtils\Event\RemoveEvent;
 use Akeneo\Component\StorageUtils\Remover\RemoverInterface;
 use Akeneo\Component\StorageUtils\StorageEvents;
-use Pim\Bundle\CatalogBundle\EventSubscriber\IndexProductModelDescendantsSubscriber;
+use Pim\Bundle\CatalogBundle\EventSubscriber\RemoveIndexProductModelDescendantsSubscriber;
 use PhpSpec\ObjectBehavior;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Prophecy\Argument;
@@ -23,7 +23,7 @@ class IndexProductModelDescendantsSubscriberSpec extends ObjectBehavior
 
     function it_is_initializable()
     {
-        $this->shouldHaveType(IndexProductModelDescendantsSubscriber::class);
+        $this->shouldHaveType(RemoveIndexProductModelDescendantsSubscriber::class);
     }
 
     function it_subscribes_to_events()
