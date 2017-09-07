@@ -44,6 +44,8 @@ class ProductModelDescendantsSaver implements SaverInterface
      */
     public function save($productModel, array $options = [])
     {
+        $this->validateProductModel($productModel);
+
         $pqb = $this->pqbFactory->create();
         $pqb->addFilter('parent', Operators::IN_LIST, [$productModel->getCode()], []);
         $children = $pqb->execute();
@@ -82,7 +84,7 @@ class ProductModelDescendantsSaver implements SaverInterface
      *
      * @throws \InvalidArgumentException
      */
-    protected function validateProduct($productModel): void
+    protected function validateProductModel($productModel): void
     {
         if (!$productModel instanceof ProductModelInterface) {
             throw new \InvalidArgumentException(
