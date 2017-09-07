@@ -5,6 +5,7 @@ parameters:
     pim_catalog.saver.group.class:                         Pim\Bundle\CatalogBundle\Doctrine\Common\Saver\GroupSaver
     pim_catalog.saver.family.class:                        Pim\Bundle\CatalogBundle\Doctrine\Common\Saver\FamilySaver
     pim_catalog.saver.attribute.class:                     Pim\Bundle\CatalogBundle\Doctrine\Common\Saver\AttributeSaver
+    pim_catalog.saver.product_model_descendants.class:     Pim\Bundle\CatalogBundle\Doctrine\Common\Saver\ProductModelDescendantsSaver
     pim_catalog.synchronizer.product_unique_data.class:    Pim\Bundle\CatalogBundle\Doctrine\Common\Saver\ProductUniqueDataSynchronizer
 
 services:
@@ -120,3 +121,10 @@ services:
 
     pim_catalog.saver.group_options_resolver:
         class: '%pim_catalog.saver.group_options_resolver.class%'
+
+    pim_catalog.saver.product_model_descendants:
+        class: '%pim_catalog.saver.product_model_descendants.class%'
+        arguments:
+            - '@pim_enrich.query.product_and_product_model_query_builder_factory'
+            - '@pim_catalog.saver.product'
+            - '@pim_catalog.saver.product_model'

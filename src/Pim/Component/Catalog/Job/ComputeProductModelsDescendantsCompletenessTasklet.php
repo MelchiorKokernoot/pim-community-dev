@@ -6,10 +6,7 @@ namespace Pim\Component\Catalog\Job;
 
 use Akeneo\Component\Batch\Model\StepExecution;
 use Akeneo\Component\StorageUtils\Saver\SaverInterface;
-use Pim\Component\Catalog\Model\ProductModelInterface;
-use Pim\Component\Catalog\Model\VariantProductInterface;
-use Pim\Component\Catalog\Query\Filter\Operators;
-use Pim\Component\Catalog\Query\ProductQueryBuilderFactoryInterface;
+use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
 use Pim\Component\Connector\Step\TaskletInterface;
 
 /**
@@ -25,28 +22,22 @@ class ComputeProductModelsDescendantsCompletenessTasklet implements TaskletInter
     /** @var StepExecution */
     private $stepExecution;
 
-    /** @var ProductQueryBuilderFactoryInterface */
-    private $pqbFactory;
+    /** @var ProductModelRepositoryInterface */
+    private $productModelRepository;
 
     /** @var SaverInterface */
-    private $productSaver;
-
-    /** @var SaverInterface */
-    private $productModelSaver;
+    private $productModelDescendantsSaver;
 
     /**
-     * @param ProductQueryBuilderFactoryInterface $pqbFactory
-     * @param SaverInterface                      $productSaver
-     * @param SaverInterface                      $productModelSaver
+     * @param ProductModelRepositoryInterface $productModelRepository
+     * @param SaverInterface                  $productModelDescendantsSaver
      */
     public function __construct(
-        ProductQueryBuilderFactoryInterface $pqbFactory,
-        SaverInterface $productSaver,
-        SaverInterface $productModelSaver
+        ProductModelRepositoryInterface $productModelRepository,
+        SaverInterface $productModelDescendantsSaver
     ) {
-        $this->pqbFactory        = $pqbFactory;
-        $this->productSaver      = $productSaver;
-        $this->productModelSaver = $productModelSaver;
+        $this->productModelRepository = $productModelRepository;
+        $this->productModelDescendantsSaver = $productModelDescendantsSaver;
     }
 
     /**
@@ -62,35 +53,10 @@ class ComputeProductModelsDescendantsCompletenessTasklet implements TaskletInter
      */
     public function execute()
     {
-        $pqb = $this->pqbFactory->create(['limit' => 200]);
         $jobParameters = $this->stepExecution->getJobParameters();
         $productModelCode = $jobParameters->get('product_model_code');
+        $productModel = $this->productModelRepository->findOneByIdentifier($productModelCode);
 
-        $pqb->addFilter('parent', Operators::IN_LIST, [$productModelCode], []);
-        $children = $pqb->execute();
-        $firstChild = $children->current();
-
-        if ($firstChild instanceof VariantProductInterface) {
-            foreach ($children as $child) {
-                $this->productSaver->save($child);
-            }
-
-            return;
-        }
-
-        if ($firstChild instanceof ProductModelInterface) {
-            foreach ($children as $child) {
-                $this->productModelSaver->save($child);
-            }
-
-            return;
-        }
-
-        throw new \InvalidArgumentException(sprintf(
-            'Expect either a "%s" or "%s", "%s" given',
-            VariantProductInterface::class,
-            ProductModelInterface::class,
-            get_class($firstChild)
-        ));
+        $this->productModelDescendantsSaver->save($productModel);
     }
 }

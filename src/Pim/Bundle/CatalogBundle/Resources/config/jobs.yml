@@ -9,9 +9,8 @@ services:
     pim_catalog.tasklet.compute_product_models_descendants_completeness:
         class: '%pim_catalog.tasklet.compute_product_models_descendants_completeness.class%'
         arguments:
-            - '@pim_enrich.query.product_and_product_model_query_builder_from_size_factory'
-            - '@pim_catalog.saver.product'
-            - '@pim_catalog.saver.product_model'
+            - '@pim_catalog.repository.product_model'
+            - '@pim_catalog.saver.product_model_descendants'
         public: false
 
     pim_catalog.step.compute_product_models_descendants_completeness:

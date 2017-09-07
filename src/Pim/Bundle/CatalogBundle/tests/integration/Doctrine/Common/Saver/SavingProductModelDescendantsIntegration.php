@@ -6,12 +6,13 @@ use Akeneo\Bundle\ElasticsearchBundle\Client;
 use Akeneo\Test\Integration\Configuration;
 use Akeneo\Test\Integration\TestCase;
 use Pim\Bundle\CatalogBundle\tests\helper\EntityBuilder;
+use Pim\Component\Catalog\Model\VariantProductInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 /**
  * Test product models and their descendants have been correctly indexed after being saved.
  */
-class IndexingProductModelDescendantsIntegration extends TestCase
+class SavingProductModelDescendantsIntegration extends TestCase
 {
     private const DOCUMENT_TYPE = 'pim_catalog_product';
 
@@ -76,6 +77,69 @@ class IndexingProductModelDescendantsIntegration extends TestCase
                 ],
             ]
         );
+    }
+
+    public function testProductModelDescendantsCompletenessIsCalculatedOnUnitarySave()
+    {
+        $this->createProductsAndProductModelsTree('seed');
+
+        $this->assertCompletenessForChannel('seed_product_variant_2', 'ecommerce', 5);
+
+        $this->get('doctrine.orm.entity_manager')->clear();
+
+        $rootProductModel = $this->get('pim_catalog.repository.product_model')
+            ->findOneByIdentifier('seed_root_product_model');
+
+        $this->get('pim_catalog.updater.product_model')->update($rootProductModel, [
+            'values' => [
+                'a_date' => [
+                    ['locale' => null, 'scope' => null, 'data' => '2016-06-13T00:00:00+02:00'],
+                ],
+            ],
+        ]);
+
+        $this->get('pim_catalog.saver.product_model')->save($rootProductModel);
+
+        sleep(10);
+
+        $this->assertCompletenessForChannel('seed_product_variant_2', 'ecommerce', 10);
+    }
+
+    public function testProductModelDescendantsCompletenessIsCalculatedOnBulkSave()
+    {
+        $this->createProductsAndProductModelsTree('seed1');
+        $this->createProductsAndProductModelsTree('seed2');
+
+        $this->assertCompletenessForChannel('seed2_product_variant_2', 'ecommerce', 5);
+
+        $this->get('doctrine.orm.entity_manager')->clear();
+
+        $rootProductModel1 = $this->get('pim_catalog.repository.product_model')
+            ->findOneByIdentifier('seed1_root_product_model');
+        $rootProductModel2 = $this->get('pim_catalog.repository.product_model')
+            ->findOneByIdentifier('seed2_root_product_model');
+
+        $this->get('pim_catalog.updater.product_model')->update($rootProductModel1, [
+            'values' => [
+                'a_date' => [
+                    ['locale' => null, 'scope' => null, 'data' => '2016-06-13T00:00:00+02:00'],
+                ],
+            ],
+        ]);
+
+        $this->get('pim_catalog.updater.product_model')->update($rootProductModel2, [
+            'values' => [
+                'a_file' => [
+                    ['locale' => null, 'scope' => null, 'data' => $this->getFixturePath('akeneo.txt')],
+                ],
+            ],
+        ]);
+
+        $this->get('pim_catalog.saver.product_model')->saveAll([$rootProductModel1, $rootProductModel2]);
+
+        sleep(10);
+
+        $this->assertCompletenessForChannel('seed2_product_variant_2', 'ecommerce', 10);
     }
 
     public function testIndexingProductModelsDescendantsOnBulkSave()
@@ -184,5 +248,27 @@ class IndexingProductModelDescendantsIntegration extends TestCase
         $entityBuilder->createVariantProduct($seed . '_variant_product_2', 'familyA', 'familyVariantA1', $subProductModel1, []);
         $entityBuilder->createVariantProduct($seed . '_variant_product_3', 'familyA', 'familyVariantA1', $subProductModel2, []);
         $entityBuilder->createVariantProduct($seed . '_variant_product_4', 'familyA', 'familyVariantA1', $subProductModel2, []);
+    }
+
+    /**
+     * @param string $productName
+     * @param string $expectedChannel
+     * @param int    $expectedRatio
+     */
+    private function assertCompletenessForChannel(string $productName, string $expectedChannel, int $expectedRatio): void
+    {
+        $productVariant2 = $this->get('pim_catalog.repository.product')
+            ->findOneByIdentifier($productName);
+        $completenessCollection = $productVariant2->getCompletenesses();
+
+        foreach ($completenessCollection as $completeness) {
+            if ($expectedChannel === $completeness->getChannel()->getCode()) {
+                $this->assertSame(
+                    $expectedRatio,
+                    $completeness->getRatio(),
+                    sprintf('Expect ratio to be "%s", "%s" given', $expectedRatio, $completeness->getRatio())
+                );
+            }
+        }
     }
 }
