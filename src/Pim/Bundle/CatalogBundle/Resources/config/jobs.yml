@@ -1,0 +1,39 @@
+parameters:
+    pim_catalog.tasklet.compute_product_models_descendants_completeness.class: Pim\Component\Catalog\Job\ComputeProductModelsDescendantsCompletenessTasklet
+    pim_catalog.compute_product_models_descendants_completeness.job_type: 'compute_product_models_descendants_completeness'
+    pim_catalog.compute_product_models_descendants_completeness.job_name: 'compute_product_models_descendants_completeness'
+    pim_catalog.compute_product_models_descendants_completeness.tasklet_name: 'compute_product_models_descendants_completeness'
+    pim_catalog.compute_descendants_completeness.connector_name: 'compute descendants completeness'
+
+services:
+    pim_catalog.tasklet.compute_product_models_descendants_completeness:
+        class: '%pim_catalog.tasklet.compute_product_models_descendants_completeness.class%'
+        arguments:
+            - '@pim_enrich.query.product_and_product_model_query_builder_from_size_factory'
+            - '@pim_catalog.saver.product'
+            - '@pim_catalog.saver.product_model'
+        public: false
+
+    pim_catalog.step.compute_product_models_descendants_completeness:
+        class: '%pim_connector.step.tasklet.class%'
+        arguments:
+            - '%pim_catalog.compute_product_models_descendants_completeness.tasklet_name%'
+            - '@event_dispatcher'
+            - '@akeneo_batch.job_repository'
+            - '@pim_catalog.tasklet.compute_product_models_descendants_completeness'
+        public: false
+
+    pim_catalog.job.compute_product_models_descendants_completeness:
+        class: '%pim_connector.job.simple_job.class%'
+        arguments:
+            - '%pim_catalog.compute_product_models_descendants_completeness.job_name%'
+            - '@event_dispatcher'
+            - '@akeneo_batch.job_repository'
+            -
+                - '@pim_catalog.step.compute_product_models_descendants_completeness'
+        public: false
+        tags:
+            -
+                name: akeneo_batch.job
+                connector: '%pim_catalog.compute_descendants_completeness.connector_name%'
+                type: '%pim_catalog.compute_product_models_descendants_completeness.job_type%'
