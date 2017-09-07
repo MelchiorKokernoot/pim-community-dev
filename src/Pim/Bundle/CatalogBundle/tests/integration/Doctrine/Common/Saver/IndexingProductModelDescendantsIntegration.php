@@ -6,10 +6,7 @@ use Akeneo\Bundle\ElasticsearchBundle\Client;
 use Akeneo\Test\Integration\Configuration;
 use Akeneo\Test\Integration\TestCase;
 use Pim\Bundle\CatalogBundle\tests\helper\EntityBuilder;
-use Pim\Bundle\CatalogBundle\tests\integration\PQB\AbstractProductAndProductModelQueryBuilderTestCase;
-use Pim\Component\Catalog\Model\ProductModelInterface;
-use Pim\Component\Catalog\Model\VariantProduct;
-use Pim\Component\Catalog\Model\VariantProductInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 /**
  * Test product models and their descendants have been correctly indexed after being saved.
@@ -27,6 +24,10 @@ class IndexingProductModelDescendantsIntegration extends TestCase
     protected function setUp()
     {
         parent::setUp();
+
+        $user = $this->get('pim_user.provider.user')->loadUserByUsername('admin');
+        $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
+        $this->get('security.token_storage')->setToken($token);
 
         $this->esProductAndProductModelClient = $this->get('akeneo_elasticsearch.client.product_and_product_model');
     }
@@ -179,18 +180,9 @@ class IndexingProductModelDescendantsIntegration extends TestCase
         $subProductModel1 = $entityBuilder->createProductModel($seed . '_sub_product_model_1', 'familyVariantA1', $rootProductModel, []);
         $subProductModel2 = $entityBuilder->createProductModel($seed . '_sub_product_model_2', 'familyVariantA1', $rootProductModel, []);
 
-        $variantProduct1 = $entityBuilder->createVariantProduct($seed . '_variant_product_1', 'familyA', 'familyVariantA1', $subProductModel1, []);
-        $variantProduct2 = $entityBuilder->createVariantProduct($seed . '_variant_product_2', 'familyA', 'familyVariantA1', $subProductModel1, []);
-        $variantProduct3 = $entityBuilder->createVariantProduct($seed . '_variant_product_3', 'familyA', 'familyVariantA1', $subProductModel2, []);
-        $variantProduct4 = $entityBuilder->createVariantProduct($seed . '_variant_product_4', 'familyA', 'familyVariantA1', $subProductModel2, []);
-
-        $this->get('pim_catalog.saver.product_model')->save($rootProductModel);
-        $this->get('pim_catalog.saver.product_model')->saveAll([$subProductModel1, $subProductModel2]);
-        $this->get('pim_catalog.saver.product')->saveAll([
-            $variantProduct1,
-            $variantProduct2,
-            $variantProduct3,
-            $variantProduct4,
-        ]);
+        $entityBuilder->createVariantProduct($seed . '_variant_product_1', 'familyA', 'familyVariantA1', $subProductModel1, []);
+        $entityBuilder->createVariantProduct($seed . '_variant_product_2', 'familyA', 'familyVariantA1', $subProductModel1, []);
+        $entityBuilder->createVariantProduct($seed . '_variant_product_3', 'familyA', 'familyVariantA1', $subProductModel2, []);
+        $entityBuilder->createVariantProduct($seed . '_variant_product_4', 'familyA', 'familyVariantA1', $subProductModel2, []);
     }
 }
