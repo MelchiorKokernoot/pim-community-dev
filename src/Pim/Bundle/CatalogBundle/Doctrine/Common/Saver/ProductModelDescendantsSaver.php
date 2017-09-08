@@ -7,7 +7,6 @@ namespace Pim\Bundle\CatalogBundle\Doctrine\Common\Saver;
 use Akeneo\Component\StorageUtils\Saver\BulkSaverInterface;
 use Akeneo\Component\StorageUtils\Saver\SaverInterface;
 use Pim\Component\Catalog\Model\ProductModelInterface;
-use Pim\Component\Catalog\Model\VariantProductInterface;
 use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
 
 /**
@@ -57,30 +56,17 @@ class ProductModelDescendantsSaver implements SaverInterface
     {
         $this->validateProductModel($productModel);
 
-        $children = $this->findDirectChildren($productModel);
-        if (empty($children)) {
-            return;
-        }
-
-        $firstChild = $children[0];
-        if ($firstChild instanceof VariantProductInterface) {
-            $this->productSaver->saveAll($children);
+        $productsChildren = $this->productModelRepository->findChildrenProducts($productModel);
+        if (!empty($productsChildren)) {
+            $this->productSaver->saveAll($productsChildren);
 
             return;
         }
 
-        if ($firstChild instanceof ProductModelInterface) {
-            $this->productModelSaver->saveAll($children);
-
-            return;
+        $productModelsChildren = $this->productModelRepository->findChildrenProductModels($productModel);
+        if (!empty($productModelsChildren)) {
+            $this->productModelSaver->saveAll($productModelsChildren);
         }
-
-        throw new \InvalidArgumentException(sprintf(
-            'Expect either a "%s" or "%s", "%s" given',
-            VariantProductInterface::class,
-            ProductModelInterface::class,
-            get_class($firstChild)
-        ));
     }
 
     /**
@@ -99,23 +85,5 @@ class ProductModelDescendantsSaver implements SaverInterface
                 )
             );
         }
-    }
-
-    /**
-     * Finds the direct children of a product model wether they are product models themselves or variant products.
-     *
-     * @param ProductModelInterface $productModel
-     *
-     * @return array
-     */
-    private function findDirectChildren(ProductModelInterface $productModel): array
-    {
-        $children = $this->productModelRepository->findChildrenProducts($productModel);
-
-        if (empty($children)) {
-            $children = $this->productModelRepository->findChildrenProductModels($productModel);
-        }
-
-        return $children;
     }
 }

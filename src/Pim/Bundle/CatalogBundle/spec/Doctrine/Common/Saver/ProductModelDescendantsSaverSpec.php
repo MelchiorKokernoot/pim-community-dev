@@ -37,11 +37,9 @@ class ProductModelDescendantsSaverSpec extends ObjectBehavior
     ) {
         $productModel->getCode()->willReturn('product_model_code');
         $productModelRepository->findChildrenProducts($productModel)
-            ->willReturn([]);
-
-        $productModelRepository->findChildrenProductModels($productModel)
             ->willReturn([$variantProduct1, $variantProduct2]);
 
+        $productModelRepository->findChildrenProductModels($productModel)->shouldNotBeCalled();
         $productSaver->saveAll([$variantProduct1, $variantProduct2])->shouldBeCalled();
 
         $this->save($productModel);
@@ -56,10 +54,10 @@ class ProductModelDescendantsSaverSpec extends ObjectBehavior
     ) {
         $productModel->getCode()->willReturn('product_model_code');
         $productModelRepository->findChildrenProducts($productModel)
-            ->willReturn([$subProductModel1, $subProductModel2]);
+            ->willReturn([]);
 
         $productModelRepository->findChildrenProductModels($productModel)
-            ->willReturn([]);
+            ->willReturn([$subProductModel1, $subProductModel2]);
 
         $productModelSaver->saveAll([$subProductModel1, $subProductModel2])->shouldBeCalled();
 
@@ -89,47 +87,5 @@ class ProductModelDescendantsSaverSpec extends ObjectBehavior
     ) {
         $this->shouldThrow(\InvalidArgumentException::class)
             ->during('save', [$wrongObject]);
-    }
-
-    function it_throws_when_a_product_model_child_is_not_a_product(
-        $productModelRepository,
-        $productSaver,
-        $productModelSaver,
-        ProductModelInterface $productModel,
-        \StdClass $wrongObject
-    ) {
-        $productModel->getCode()->willReturn('product_model_code');
-        $productModelRepository->findChildrenProducts($productModel)
-            ->willReturn([$wrongObject]);
-
-        $productModelRepository->findChildrenProductModels($productModel)
-            ->willReturn([]);
-
-        $productModelSaver->saveAll(Argument::cetera())->shouldNotBeCalled();
-        $productSaver->saveAll(Argument::cetera())->shouldNotBeCalled();
-
-        $this->shouldThrow(\InvalidArgumentException::class)
-            ->during('save', [$productModel]);
-    }
-
-    function it_throws_when_a_product_model_child_is_not_a_product_model(
-        $productModelRepository,
-        $productSaver,
-        $productModelSaver,
-        ProductModelInterface $productModel,
-        \StdClass $wrongObject
-    ) {
-        $productModel->getCode()->willReturn('product_model_code');
-        $productModelRepository->findChildrenProducts($productModel)
-            ->willReturn([]);
-
-        $productModelRepository->findChildrenProductModels($productModel)
-            ->willReturn([$wrongObject]);
-
-        $productModelSaver->saveAll(Argument::cetera())->shouldNotBeCalled();
-        $productSaver->saveAll(Argument::cetera())->shouldNotBeCalled();
-
-        $this->shouldThrow(\InvalidArgumentException::class)
-            ->during('save', [$productModel]);
     }
 }
