@@ -11,6 +11,15 @@ use Pim\Component\Catalog\Query\Filter\Operators;
 use Pim\Component\Catalog\Query\ProductQueryBuilderFactoryInterface;
 
 /**
+ * This class's responsibility is to call save on the direct children of a product model.
+ *
+ * This call, will in turn trigger a save on the children's direct children, etc (thanks to our POST_SAVE event).
+ * In the end, we should have called save on each element of the product model subtree.
+ *
+ * This ensures two things:
+ * - Recalculate the completeness for each *variant product* belonging to the subtree
+ * - Trigger the reindexing of the model and variant product belonging to the subtree
+ *
  * @author    Adrien Pétremann <adrien.petremann@akeneo.com>
  * @copyright 2017 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
