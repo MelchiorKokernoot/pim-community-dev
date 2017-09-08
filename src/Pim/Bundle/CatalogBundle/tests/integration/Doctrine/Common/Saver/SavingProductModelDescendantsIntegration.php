@@ -79,7 +79,7 @@ class SavingProductModelDescendantsIntegration extends TestCase
     {
         $this->createProductsAndProductModelsTree('seed');
 
-        $this->assertCompletenessForChannel('seed_product_variant_2', 'ecommerce', 5);
+        $this->assertCompletenessForChannel('seed_variant_product_2', 'ecommerce', 5);
 
         $this->get('doctrine.orm.entity_manager')->clear();
 
@@ -98,7 +98,7 @@ class SavingProductModelDescendantsIntegration extends TestCase
 
         sleep(10);
 
-        $this->assertCompletenessForChannel('seed_product_variant_2', 'ecommerce', 10);
+        $this->assertCompletenessForChannel('seed_variant_product_2', 'ecommerce', 10);
     }
 
     public function testProductModelDescendantsCompletenessIsCalculatedOnBulkSave()
@@ -106,7 +106,7 @@ class SavingProductModelDescendantsIntegration extends TestCase
         $this->createProductsAndProductModelsTree('seed1');
         $this->createProductsAndProductModelsTree('seed2');
 
-        $this->assertCompletenessForChannel('seed2_product_variant_2', 'ecommerce', 5);
+        $this->assertCompletenessForChannel('seed2_variant_product_2', 'ecommerce', 5);
 
         $this->get('doctrine.orm.entity_manager')->clear();
 
@@ -135,7 +135,7 @@ class SavingProductModelDescendantsIntegration extends TestCase
 
         sleep(10);
 
-        $this->assertCompletenessForChannel('seed2_product_variant_2', 'ecommerce', 10);
+        $this->assertCompletenessForChannel('seed2_variant_product_2', 'ecommerce', 10);
     }
 
     public function testIndexingProductModelsDescendantsOnBulkSave()
