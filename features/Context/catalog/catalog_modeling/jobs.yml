@@ -212,3 +212,8 @@ jobs:
                     scope: ecommerce
                     locales:
                         - en_US
+    compute_product_models_descendants_completeness:
+        connector: compute descendants completeness
+        alias:     compute_product_models_descendants_completeness
+        label:     Compute product models descendants completeness
+        type:      compute_product_models_descendants_completeness
