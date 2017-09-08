@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Pim\Bundle\CatalogBundle\EventSubscriber;
 
 use Akeneo\Bundle\BatchBundle\Job\JobInstanceRepository;
-use Akeneo\Bundle\BatchBundle\Launcher\SimpleJobLauncher;
+use Akeneo\Bundle\BatchBundle\Launcher\JobLauncherInterface;
+use Akeneo\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
 use Akeneo\Component\StorageUtils\StorageEvents;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * This subscriber listens to PostSave events on Product Models.
@@ -24,13 +26,13 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
  */
 class ComputeProductModelDescendantsCompletenessSubscriber implements EventSubscriberInterface
 {
-    /** @var TokenStorage */
+    /** @var TokenStorageInterface */
     private $tokenStorage;
 
-    /** @var SimpleJobLauncher */
+    /** @var JobLauncherInterface */
     private $jobLauncher;
 
-    /** @var JobInstanceRepository */
+    /** @var IdentifiableObjectRepositoryInterface */
     private $jobInstanceRepository;
 
     /** @var string */
@@ -43,9 +45,9 @@ class ComputeProductModelDescendantsCompletenessSubscriber implements EventSubsc
      * @param string                $jobName
      */
     public function __construct(
-        TokenStorage $tokenStorage,
-        SimpleJobLauncher $jobLauncher,
-        JobInstanceRepository $jobInstanceRepository,
+        TokenStorageInterface $tokenStorage,
+        JobLauncherInterface $jobLauncher,
+        IdentifiableObjectRepositoryInterface $jobInstanceRepository,
         string $jobName
     ) {
         $this->tokenStorage = $tokenStorage;

@@ -9,8 +9,6 @@ use Akeneo\Component\StorageUtils\StorageEvents;
 use Pim\Bundle\CatalogBundle\EventSubscriber\RemoveIndexProductModelDescendantsSubscriber;
 use PhpSpec\ObjectBehavior;
 use Pim\Component\Catalog\Model\ProductModelInterface;
-use Prophecy\Argument;
-use Symfony\Component\EventDispatcher\GenericEvent;
 
 class RemoveIndexProductModelDescendantsSubscriberSpec extends ObjectBehavior
 {

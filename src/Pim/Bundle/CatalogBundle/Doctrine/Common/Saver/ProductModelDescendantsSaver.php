@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Pim\Bundle\CatalogBundle\Doctrine\Common\Saver;
 
 use Akeneo\Component\StorageUtils\Saver\SaverInterface;
@@ -80,7 +82,7 @@ class ProductModelDescendantsSaver implements SaverInterface
     }
 
     /**
-     * @param $productModel
+     * @param ProductModelInterface $productModel
      *
      * @throws \InvalidArgumentException
      */

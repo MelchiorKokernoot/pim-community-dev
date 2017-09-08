@@ -6,7 +6,6 @@ use Akeneo\Bundle\ElasticsearchBundle\Client;
 use Akeneo\Test\Integration\Configuration;
 use Akeneo\Test\Integration\TestCase;
 use Pim\Bundle\CatalogBundle\tests\helper\EntityBuilder;
-use Pim\Component\Catalog\Model\VariantProductInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 /**
@@ -25,12 +24,9 @@ class SavingProductModelDescendantsIntegration extends TestCase
     protected function setUp()
     {
         parent::setUp();
-
-        $user = $this->get('pim_user.provider.user')->loadUserByUsername('admin');
-        $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
-        $this->get('security.token_storage')->setToken($token);
-
         $this->esProductAndProductModelClient = $this->get('akeneo_elasticsearch.client.product_and_product_model');
+
+        $this->authenticateUserAdmin();
     }
 
     public function testIndexingProductModelDescendantsOnUnitarySave()
@@ -270,5 +266,12 @@ class SavingProductModelDescendantsIntegration extends TestCase
                 );
             }
         }
+    }
+
+    private function authenticateUserAdmin(): void
+    {
+        $user = $this->get('pim_user.provider.user')->loadUserByUsername('admin');
+        $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
+        $this->get('security.token_storage')->setToken($token);
     }
 }
