@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Pim\Bundle\CatalogBundle\Doctrine\Common\Saver;
 
+use Akeneo\Component\StorageUtils\Saver\BulkSaverInterface;
 use Akeneo\Component\StorageUtils\Saver\SaverInterface;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Pim\Component\Catalog\Model\VariantProductInterface;
-use Pim\Component\Catalog\Query\Filter\Operators;
-use Pim\Component\Catalog\Query\ProductQueryBuilderFactoryInterface;
+use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
 
 /**
  * This class's responsibility is to call save on the direct children of a product model.
@@ -26,27 +26,27 @@ use Pim\Component\Catalog\Query\ProductQueryBuilderFactoryInterface;
  */
 class ProductModelDescendantsSaver implements SaverInterface
 {
-    /** @var ProductQueryBuilderFactoryInterface */
-    private $pqbFactory;
-
     /** @var SaverInterface */
     private $productSaver;
 
     /** @var SaverInterface */
     private $productModelSaver;
 
+    /** @var ProductModelRepositoryInterface */
+    private $productModelRepository;
+
     /**
-     * @param ProductQueryBuilderFactoryInterface $pqbFactory
-     * @param SaverInterface                      $productSaver
-     * @param SaverInterface                      $productModelSaver
+     * @param ProductModelRepositoryInterface $productModelRepository
+     * @param BulkSaverInterface              $productSaver
+     * @param BulkSaverInterface              $productModelSaver
      */
     public function __construct(
-        ProductQueryBuilderFactoryInterface $pqbFactory,
-        SaverInterface $productSaver,
-        SaverInterface $productModelSaver
+        ProductModelRepositoryInterface $productModelRepository,
+        BulkSaverInterface $productSaver,
+        BulkSaverInterface $productModelSaver
     ) {
-        $this->pqbFactory        = $pqbFactory;
-        $this->productSaver      = $productSaver;
+        $this->productModelRepository = $productModelRepository;
+        $this->productSaver = $productSaver;
         $this->productModelSaver = $productModelSaver;
     }
 
@@ -57,27 +57,20 @@ class ProductModelDescendantsSaver implements SaverInterface
     {
         $this->validateProductModel($productModel);
 
-        $pqb = $this->pqbFactory->create();
-        $pqb->addFilter('parent', Operators::IN_LIST, [$productModel->getCode()], []);
-        $children = $pqb->execute();
-        if (0 === $children->count()) {
+        $children = $this->findDirectChildren($productModel);
+        if (empty($children)) {
             return;
         }
 
-        $firstChild = $children->current();
-
+        $firstChild = $children[0];
         if ($firstChild instanceof VariantProductInterface) {
-            foreach ($children as $child) {
-                $this->productSaver->save($child);
-            }
+            $this->productSaver->saveAll($children);
 
             return;
         }
 
         if ($firstChild instanceof ProductModelInterface) {
-            foreach ($children as $child) {
-                $this->productModelSaver->save($child);
-            }
+            $this->productModelSaver->saveAll($children);
 
             return;
         }
@@ -106,5 +99,23 @@ class ProductModelDescendantsSaver implements SaverInterface
                 )
             );
         }
+    }
+
+    /**
+     * Finds the direct children of a product model wether they are product models themselves or variant products.
+     *
+     * @param ProductModelInterface $productModel
+     *
+     * @return array
+     */
+    private function findDirectChildren(ProductModelInterface $productModel): array
+    {
+        $children = $this->productModelRepository->findChildrenProducts($productModel);
+
+        if (empty($children)) {
+            $children = $this->productModelRepository->findChildrenProductModels($productModel);
+        }
+
+        return $children;
     }
 }

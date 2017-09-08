@@ -125,6 +125,6 @@ services:
     pim_catalog.saver.product_model_descendants:
         class: '%pim_catalog.saver.product_model_descendants.class%'
         arguments:
-            - '@pim_enrich.query.product_and_product_model_query_builder_factory'
+            - '@pim_catalog.repository.product_model'
             - '@pim_catalog.saver.product'
             - '@pim_catalog.saver.product_model'
