@@ -68,7 +68,7 @@ jobs:
         label:     CSV default product import
         type:      import
     compute_product_models_descendants_completeness:
-        connector: compute descendants completeness
+        connector: internal
         alias:     compute_product_models_descendants_completeness
         label:     Compute product models descendants completeness
-        type:      compute_product_models_descendants_completeness
+        type:      completeness

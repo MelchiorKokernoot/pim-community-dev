@@ -286,7 +286,7 @@ class JobInstance
      */
     public function setJobName($jobName)
     {
-        if ($this->jobName !== null) {
+        if ($this->jobName !== null && $jobName !== $this->jobName) {
             throw new \LogicException('Job name already set in JobInstance');
         }
 
@@ -307,7 +307,7 @@ class JobInstance
      */
     public function setConnector($connector)
     {
-        if ($this->connector !== null) {
+        if ($this->connector !== null && $connector !== $this->connector) {
             throw new \LogicException('Connector already set in JobInstance');
         }
 

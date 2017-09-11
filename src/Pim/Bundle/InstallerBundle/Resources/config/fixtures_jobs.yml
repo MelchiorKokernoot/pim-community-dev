@@ -90,7 +90,7 @@ jobs:
             filePath: families.csv
 
     fixtures_family_variant_csv:
-        order: 60
+        order: 61
         connector: Data fixtures
         alias:     fixtures_family_variant_csv
         label:     Family variants data fixtures
@@ -181,3 +181,12 @@ jobs:
         type:      fixtures
         configuration:
             filePath: jobs.yml
+
+    # Job used in the product and product model import jobs.
+    # This job is not executed by the InstallerBundle per say
+    compute_product_models_descendants_completeness:
+        order: 110
+        connector: internal
+        alias:     compute_product_models_descendants_completeness
+        label:     Compute product models descendants completeness
+        type:      completeness
