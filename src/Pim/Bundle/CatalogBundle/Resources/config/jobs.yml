@@ -16,7 +16,7 @@ services:
             - '@pim_catalog.saver.product_model_descendants'
         public: false
 
-    # This tasklet saves only descendant products
+    # This tasklet saves only descendants that are products
     pim_catalog.tasklet.recursive_compute_product_models_descendants_completeness:
         class: '%pim_catalog.tasklet.recursive_compute_product_models_descendants_completeness.class%'
         arguments:
