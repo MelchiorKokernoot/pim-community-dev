@@ -31,5 +31,7 @@ class ComputeProductModelsDescendantsCompletenessTaskletSpec extends ObjectBehav
 
         $productModelRepository->findOneByIdentifier('tshirt_root')->willReturn($productModel);
         $productModelDescendantsSaver->save($productModel);
+
+        $this->execute();
     }
 }

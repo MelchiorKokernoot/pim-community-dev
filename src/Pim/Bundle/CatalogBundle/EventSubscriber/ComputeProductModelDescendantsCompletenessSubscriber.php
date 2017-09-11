@@ -4,21 +4,18 @@ declare(strict_types=1);
 
 namespace Pim\Bundle\CatalogBundle\EventSubscriber;
 
-use Akeneo\Bundle\BatchBundle\Job\JobInstanceRepository;
 use Akeneo\Bundle\BatchBundle\Launcher\JobLauncherInterface;
 use Akeneo\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
 use Akeneo\Component\StorageUtils\StorageEvents;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * This subscriber listens to PostSave events on Product Models.
  *
- * When a product model is saved, it launches a job responsible to save its direct children:
- * This way they will be indexed and their completeness will be computed (it they are products).
+ * When a product model is saved, it launches a job responsible compute completeness of its children.
  *
  * @author    Adrien Pétremann <adrien.petremann@akeneo.com>
  * @copyright 2017 Akeneo SAS (http://www.akeneo.com)
@@ -39,10 +36,10 @@ class ComputeProductModelDescendantsCompletenessSubscriber implements EventSubsc
     private $jobName;
 
     /**
-     * @param TokenStorage          $tokenStorage
-     * @param SimpleJobLauncher     $jobLauncher
-     * @param JobInstanceRepository $jobInstanceRepository
-     * @param string                $jobName
+     * @param TokenStorageInterface                 $tokenStorage
+     * @param JobLauncherInterface                  $jobLauncher
+     * @param IdentifiableObjectRepositoryInterface $jobInstanceRepository
+     * @param string                                $jobName
      */
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -80,7 +77,7 @@ class ComputeProductModelDescendantsCompletenessSubscriber implements EventSubsc
         $user = $this->tokenStorage->getToken()->getUser();
         $jobInstance = $this->jobInstanceRepository->findOneByIdentifier($this->jobName);
 
-        $this->jobLauncher->launch($jobInstance, $user, ['product_model_code' => $productModel->getCode()]);
+        $this->jobLauncher->launch($jobInstance, $user, ['product_model_codes' => [$productModel->getCode()]]);
     }
 
     /**
@@ -100,8 +97,10 @@ class ComputeProductModelDescendantsCompletenessSubscriber implements EventSubsc
         $user = $this->tokenStorage->getToken()->getUser();
         $jobInstance = $this->jobInstanceRepository->findOneByIdentifier($this->jobName);
 
-        foreach ($productModels as $productModel) {
-            $this->jobLauncher->launch($jobInstance, $user, ['product_model_code' => $productModel->getCode()]);
-        }
+        $productModelsCodes = array_map(function (ProductModelInterface $productModel): string {
+            return $productModel->getCode();
+        }, $productModels);
+
+        $this->jobLauncher->launch($jobInstance, $user, ['product_model_codes' => $productModelsCodes]);
     }
 }

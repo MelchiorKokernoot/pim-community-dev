@@ -51,7 +51,7 @@ class ComputeProductModelDescendantsCompletenessSubscriberSpec extends ObjectBeh
         $jobInstanceRepository->findOneByIdentifier('compute_product_models_descendants_completeness')
             ->willReturn($jobInstance);
 
-        $jobLauncher->launch($jobInstance, $user, ['product_model_code' => 'product_model_code'])
+        $jobLauncher->launch($jobInstance, $user, ['product_model_codes' => ['product_model_code']])
             ->shouldBeCalled();
 
         $this->computeProductModelDescendantsCompleteness($event);
@@ -78,10 +78,7 @@ class ComputeProductModelDescendantsCompletenessSubscriberSpec extends ObjectBeh
         $jobInstanceRepository->findOneByIdentifier('compute_product_models_descendants_completeness')
             ->willReturn($jobInstance);
 
-        $jobLauncher->launch($jobInstance, $user, ['product_model_code' => 'jambon'])
-            ->shouldBeCalled();
-
-        $jobLauncher->launch($jobInstance, $user, ['product_model_code' => 'fromage'])
+        $jobLauncher->launch($jobInstance, $user, ['product_model_codes' => ['jambon', 'fromage']])
             ->shouldBeCalled();
 
         $this->bulkComputeProductModelDescendantsCompleteness($event);

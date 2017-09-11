@@ -35,7 +35,7 @@ class ComputeProductModelsDescendantsCompleteness implements ConstraintCollectio
         return new Collection(
             [
                 'fields' => [
-                    'product_model_code' => new NotBlank()
+                    'product_model_codes' => new NotBlank()
                 ]
             ]
         );

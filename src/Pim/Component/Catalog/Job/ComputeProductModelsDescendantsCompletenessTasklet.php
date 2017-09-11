@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Pim\Component\Catalog\Job;
 
 use Akeneo\Component\Batch\Model\StepExecution;
+use Akeneo\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
 use Akeneo\Component\StorageUtils\Saver\SaverInterface;
-use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
 use Pim\Component\Connector\Step\TaskletInterface;
 
 /**
@@ -22,18 +22,18 @@ class ComputeProductModelsDescendantsCompletenessTasklet implements TaskletInter
     /** @var StepExecution */
     private $stepExecution;
 
-    /** @var ProductModelRepositoryInterface */
+    /** @var IdentifiableObjectRepositoryInterface */
     private $productModelRepository;
 
     /** @var SaverInterface */
     private $productModelDescendantsSaver;
 
     /**
-     * @param ProductModelRepositoryInterface $productModelRepository
-     * @param SaverInterface                  $productModelDescendantsSaver
+     * @param IdentifiableObjectRepositoryInterface $productModelRepository
+     * @param SaverInterface                        $productModelDescendantsSaver
      */
     public function __construct(
-        ProductModelRepositoryInterface $productModelRepository,
+        IdentifiableObjectRepositoryInterface $productModelRepository,
         SaverInterface $productModelDescendantsSaver
     ) {
         $this->productModelRepository = $productModelRepository;
