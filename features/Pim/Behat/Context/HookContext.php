@@ -95,8 +95,24 @@ class HookContext extends PimContext
             ->setArguments(['behat_consumer', '--env=behat'])
             ->setTimeout(null);
 
+
         $process = $processBuilder->getProcess();
-        $process->start();
+
+        $cmd1 = sprintf('echo "test1" > %s/log.txt', $this->getParameter('kernel.project_dir'));
+
+        $cmd2 = sprintf('echo "test2" >> %s/log.txt', $this->getParameter('kernel.project_dir'));
+
+        //exec('php -r \'echo function_exists("foo") ? "yes" : "no";\' &');
+
+        //$process->start();
+        $cmd = $process->getCommandLine();
+        $cmd .= ' >/dev/null 2>&1 &';
+
+        echo $cmd;
+
+        exec($cmd1);
+        exec($cmd);
+        exec($cmd2);
 
         $this->jobConsumerProcess = $process;
     }
@@ -106,7 +122,8 @@ class HookContext extends PimContext
      */
     public function stopJobConsumer()
     {
-        $this->jobConsumerProcess->stop();
+        //echo 'stop job consumer' . PHP_EOL;
+        //$this->jobConsumerProcess->stop();
     }
 
     /**
