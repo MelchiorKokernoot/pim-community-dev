@@ -13,6 +13,8 @@ use Pim\Component\Catalog\Model\FamilyInterface;
 use Pim\Component\Catalog\Model\FamilyVariantInterface;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Pim\Component\Catalog\Model\ValueInterface;
+use Pim\Component\Catalog\ProductModel\Query\FindVariantProductCompletenessInterface;
+use Pim\Component\Catalog\ProductModel\ReadModel\VariantProductCompleteness;
 use Pim\Component\Catalog\Repository\LocaleRepositoryInterface;
 use Pim\Component\Catalog\ValuesFiller\EntityWithFamilyValuesFillerInterface;
 use Pim\Component\Enrich\Converter\ConverterInterface;
@@ -31,7 +33,8 @@ class ProductModelNormalizerSpec extends ObjectBehavior
         FormProviderInterface $formProvider,
         LocaleRepositoryInterface $localeRepository,
         EntityWithFamilyValuesFillerInterface $entityValuesFiller,
-        EntityWithFamilyVariantAttributesProvider $attributesProvider
+        EntityWithFamilyVariantAttributesProvider $attributesProvider,
+        FindVariantProductCompletenessInterface $findVariantProductCompleteness
     ) {
         $this->beConstructedWith(
             $normalizer,
@@ -43,7 +46,8 @@ class ProductModelNormalizerSpec extends ObjectBehavior
             $formProvider,
             $localeRepository,
             $entityValuesFiller,
-            $attributesProvider
+            $attributesProvider,
+            $findVariantProductCompleteness
         );
     }
 
@@ -62,11 +66,13 @@ class ProductModelNormalizerSpec extends ObjectBehavior
         $formProvider,
         $localeRepository,
         $attributesProvider,
+        $findVariantProductCompleteness,
         AttributeInterface $pictureAttribute,
         ProductModelInterface $productModel,
         FamilyVariantInterface $familyVariant,
         FamilyInterface $family,
-        ValueInterface $picture
+        ValueInterface $picture,
+        VariantProductCompleteness $variantProductCompleteness
     ) {
         $options = [
             'decimal_separator' => ',',
@@ -149,6 +155,12 @@ class ProductModelNormalizerSpec extends ObjectBehavior
 
         $formProvider->getForm($productModel)->willReturn('pim-product-model-edit-form');
 
+        $findVariantProductCompleteness->__invoke($productModel)->willReturn($variantProductCompleteness);
+        $normalizer->normalize($variantProductCompleteness, 'internal_api')->willReturn([
+            'completenesses' => [],
+            'total' => 10,
+        ]);
+
         $this->normalize($productModel, 'internal_api', $options)->shouldReturn(
             [
                 'code'           => 'tshirt_blue',
@@ -157,6 +169,10 @@ class ProductModelNormalizerSpec extends ObjectBehavior
                 'categories'     => ['summer'],
                 'values'         => $valuesConverted,
                 'meta'           => [
+                    'variant_product_completeness' => [
+                        'completenesses' => [],
+                        'total' => 10,
+                    ],
                     'family_variant' => $familyVariantNormalized,
                     'form'           => 'pim-product-model-edit-form',
                     'id'             => 12,
@@ -185,11 +201,13 @@ class ProductModelNormalizerSpec extends ObjectBehavior
         $formProvider,
         $localeRepository,
         $attributesProvider,
+        $findVariantProductCompleteness,
         AttributeInterface $pictureAttribute,
         ProductModelInterface $productModel,
         FamilyVariantInterface $familyVariant,
         FamilyInterface $family,
-        ValueInterface $picture
+        ValueInterface $picture,
+        VariantProductCompleteness $variantProductCompleteness
     ) {
         $options = [
             'decimal_separator' => ',',
@@ -260,6 +278,12 @@ class ProductModelNormalizerSpec extends ObjectBehavior
 
         $formProvider->getForm($productModel)->willReturn('pim-product-model-edit-form');
 
+        $findVariantProductCompleteness->__invoke($productModel)->willReturn($variantProductCompleteness);
+        $normalizer->normalize($variantProductCompleteness, 'internal_api')->willReturn([
+            'completenesses' => [],
+            'total' => 10,
+        ]);
+
         $this->normalize($productModel, 'internal_api', $options)->shouldReturn(
             [
                 'code'           => 'tshirt_blue',
@@ -268,6 +292,10 @@ class ProductModelNormalizerSpec extends ObjectBehavior
                 'categories'     => ['summer'],
                 'values'         => $valuesConverted,
                 'meta'           => [
+                    'variant_product_completeness' => [
+                        'completenesses' => [],
+                        'total' => 10,
+                    ],
                     'family_variant' => $familyVariantNormalized,
                     'form'           => 'pim-product-model-edit-form',
                     'id'             => 12,
