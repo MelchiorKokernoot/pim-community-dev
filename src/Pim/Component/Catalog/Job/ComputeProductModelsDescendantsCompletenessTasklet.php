@@ -54,8 +54,8 @@ class ComputeProductModelsDescendantsCompletenessTasklet implements TaskletInter
     public function execute()
     {
         $jobParameters = $this->stepExecution->getJobParameters();
-        $productModelCode = $jobParameters->get('product_model_code');
-        $productModel = $this->productModelRepository->findOneByIdentifier($productModelCode);
+        $productModelCodes = $jobParameters->get('product_model_codes');
+        $productModel = $this->productModelRepository->findOneByIdentifier($productModelCodes[0]);
 
         $this->productModelDescendantsSaver->save($productModel);
     }

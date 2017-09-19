@@ -105,16 +105,16 @@ class ProductModelRepository extends EntityRepository implements ProductModelRep
     /**
      * {@inheritdoc}
      */
-    public function findDescendantProductIdentifiers($productModel): array
+    public function findDescendantProductIdentifiers(ProductModelInterface $productModel): array
     {
         $qb = $this
             ->_em
             ->createQueryBuilder()
             ->select('p.identifier')
             ->from(VariantProduct::class, 'p')
-            ->innerJoin('p.parent', 'pm', 'WITH', 'p.parent = pm.code')
+            ->innerJoin('p.parent', 'pm', 'WITH', 'p.parent = pm.id')
             ->where('p.parent = :parent')
-            ->orWhere('pm.code = :parent')
+            ->orWhere('pm.parent = :parent')
             ->setParameter('parent', $productModel);
 
         return $qb->getQuery()->execute();

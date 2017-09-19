@@ -52,5 +52,5 @@ interface ProductModelRepositoryInterface extends
      */
     public function findChildrenProductModels(ProductModelInterface $productModel): array;
 
-    public function findDescendantProductIdentifiers($productModel): array;
+    public function findDescendantProductIdentifiers(ProductModelInterface $productModel): array;
 }
