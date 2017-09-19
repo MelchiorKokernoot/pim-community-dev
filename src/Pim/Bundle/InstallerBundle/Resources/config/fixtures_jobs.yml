@@ -135,7 +135,7 @@ jobs:
             filePath: users.csv
 
     fixtures_product_model_csv:
-        order: 80
+        order: 81
         connector: Data fixtures
         alias:     fixtures_product_model_csv
         label:     Product model data fixtures
@@ -169,24 +169,15 @@ jobs:
             familyColumn: family
             groupsColumn: groups
             realTimeVersioning: true
-            enabledComparison: true
+            enabledComparison: true 
             decimalSeparator: .
             dateFormat: yyyy-MM-dd
 
     fixtures_job_yml:
-        order: 100
+        order: 80
         connector: Data fixtures
         alias:     fixtures_job_yml
         label:     Jobs data fixtures
         type:      fixtures
         configuration:
             filePath: jobs.yml
-
-    # Job used in the product and product model import jobs.
-    # This job is not executed by the InstallerBundle per say
-    compute_product_models_descendants_completeness:
-        order: 110
-        connector: internal
-        alias:     compute_product_models_descendants_completeness
-        label:     Compute product models descendants completeness
-        type:      completeness
