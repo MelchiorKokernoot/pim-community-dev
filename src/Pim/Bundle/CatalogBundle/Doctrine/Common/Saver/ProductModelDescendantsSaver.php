@@ -19,6 +19,7 @@ use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
  * - Recalculate the completeness for each *variant product* belonging to the subtree
  * - Trigger the reindexing of the model and variant product belonging to the subtree
  *
+ * @internal
  * @author    Adrien Pétremann <adrien.petremann@akeneo.com>
  * @copyright 2017 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -72,7 +73,7 @@ class ProductModelDescendantsSaver implements SaverInterface
     /**
      * {@inheritdoc}
      */
-    public function save($productModel, array $options = [])
+    public function save($productModel, array $options = []): void
     {
         $this->validateProductModel($productModel);
 

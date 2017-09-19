@@ -7,7 +7,6 @@ parameters:
     pim_catalog.compute_descendants.connector_name: 'compute descendants completeness'
 
 services:
-    # This tasklet saves every descendant
     pim_catalog.tasklet.compute_product_models_descendants:
         class: '%pim_catalog.tasklet.compute_product_models_descendants.class%'
         arguments:

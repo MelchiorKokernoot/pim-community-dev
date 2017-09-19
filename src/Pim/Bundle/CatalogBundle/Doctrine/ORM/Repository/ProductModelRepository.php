@@ -120,6 +120,9 @@ class ProductModelRepository extends EntityRepository implements ProductModelRep
         return $qb->getQuery()->execute();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function findByIdentifiers(array $codes): array
     {
         return $this->findBy(['code' => $codes]);

@@ -6,31 +6,21 @@ use Pim\Bundle\CatalogBundle\tests\integration\PQB\AbstractProductQueryBuilderTe
 use Pim\Component\Catalog\Query\Sorter\Directions;
 
 /**
- * Be aware that product are sorted by their ID (meaning their order of creation).
- *
  * @author    Philippe Mossière <philippe.mossiere@akeneo.com>
  * @copyright 2017 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  */
 class InGroupSorterIntegration extends AbstractProductQueryBuilderTestCase
 {
-    const IN_GROUP = 'in_group';
-
     public function testSortDescendant()
     {
-        $groupId = $this->getGroupId('groupC');
-        $key = sprintf('%s_%s', self::IN_GROUP, $groupId);
-
-        $result = $this->executeSorter([[$key, Directions::DESCENDING]]);
+        $result = $this->executeSorter([['in_group_3', Directions::DESCENDING]]);
         $this->assertOrder($result, ['baz', 'foo', 'bar', 'empty']);
     }
 
     public function testSortAscendant()
     {
-        $groupId = $this->getGroupId('groupC');
-        $key = sprintf('%s_%s', self::IN_GROUP, $groupId);
-
-        $result = $this->executeSorter([[$key, Directions::ASCENDING]]);
+        $result = $this->executeSorter([['in_group_3', Directions::ASCENDING]]);
         $this->assertOrder($result, ['foo', 'bar', 'empty', 'baz']);
     }
 
@@ -40,10 +30,7 @@ class InGroupSorterIntegration extends AbstractProductQueryBuilderTestCase
      */
     public function testErrorOperatorNotSupported()
     {
-        $groupId = $this->getGroupId('groupC');
-        $key = sprintf('%s_%s', self::IN_GROUP, $groupId);
-
-        $this->executeSorter([[$key, 'A_BAD_DIRECTION']]);
+        $this->executeSorter([['in_group_3', 'A_BAD_DIRECTION']]);
     }
 
     /**
@@ -68,21 +55,4 @@ class InGroupSorterIntegration extends AbstractProductQueryBuilderTestCase
         $this->createProduct('baz', ['groups' => ['groupC']]);
         $this->createProduct('empty', []);
     }
-
-    /**
-     * @param string $groupCode
-     *
-     * @return int
-     */
-    private function getGroupId(string $groupCode): int
-    {
-        $group = $this->get('pim_catalog.repository.group')->findOneByIdentifier($groupCode);
-
-        if (null === $group) {
-            throw new \LogicException(sprintf('Cannot find a group with code "%s"', $groupCode));
-        }
-
-        return $group->getId();
-    }
-
 }

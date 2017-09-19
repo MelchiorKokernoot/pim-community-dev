@@ -52,6 +52,13 @@ interface ProductModelRepositoryInterface extends
      */
     public function findChildrenProductModels(ProductModelInterface $productModel): array;
 
+    /**
+     * Returns the identifiers of the products belonging to a product model descendants subtree
+     *
+     * @param ProductModelInterface $productModel
+     *
+     * @return array
+     */
     public function findDescendantProductIdentifiers(ProductModelInterface $productModel): array;
 
     /**

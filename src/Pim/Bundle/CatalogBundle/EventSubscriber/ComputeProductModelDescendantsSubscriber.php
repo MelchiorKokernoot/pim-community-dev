@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  * This subscriber listens to PostSave events on Product Models.
  *
  * When a product model is saved, it launches a job responsible to trigger the computation
- * of its children's completeness.
+ * of its product children's completeness and the indexation of the whole subtree.
  *
  * @author    Adrien Pétremann <adrien.petremann@akeneo.com>
  * @copyright 2017 Akeneo SAS (http://www.akeneo.com)

@@ -43,6 +43,8 @@ class ComputeProductModelDescendantsSubscriberSpec extends ObjectBehavior
         JobInstance $jobInstance
     ) {
         $event->getSubject()->willReturn($productModel);
+        $event->hasArgument('unitary')->willReturn(true);
+        $event->getArgument('unitary')->willReturn(true);
         $productModel->getCode()->willReturn('product_model_code');
 
         $tokenStorage->getToken()->willReturn($token);
@@ -114,6 +116,33 @@ class ComputeProductModelDescendantsSubscriberSpec extends ObjectBehavior
         \stdClass $wrongObject
     ) {
         $event->getSubject()->willReturn([$wrongObject]);
+
+        $jobLauncher->launch(Argument::cetera())->shouldNotBeCalled();
+
+        $this->bulkComputeProductModelDescendantsCompleteness($event);
+    }
+
+    function it_does_not_launch_a_job_if_the_event_has_no_unitary_argument(
+        $jobLauncher,
+        GenericEvent $event,
+        \stdClass $wrongObject
+    ) {
+        $event->getSubject()->willReturn([$wrongObject]);
+        $event->hasArgument('unitary')->willReturn(false);
+
+        $jobLauncher->launch(Argument::cetera())->shouldNotBeCalled();
+
+        $this->bulkComputeProductModelDescendantsCompleteness($event);
+    }
+
+    function it_does_not_launch_a_job_if_the_event_is_not_unitary(
+        $jobLauncher,
+        GenericEvent $event,
+        \stdClass $wrongObject
+    ) {
+        $event->getSubject()->willReturn([$wrongObject]);
+        $event->hasArgument('unitary')->willReturn(true);
+        $event->getArgument('unitary')->willReturn(false);
 
         $jobLauncher->launch(Argument::cetera())->shouldNotBeCalled();
 
