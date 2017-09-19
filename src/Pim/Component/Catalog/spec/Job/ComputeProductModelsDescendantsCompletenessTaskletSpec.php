@@ -18,19 +18,21 @@ class ComputeProductModelsDescendantsCompletenessTaskletSpec extends ObjectBehav
         $this->beConstructedWith($productModelRepository, $productModelDescendantsSaver);
     }
 
-    function it_saves_the_product_model_on_execute(
+    function it_saves_the_product_model_descendants_on_execute(
         $productModelRepository,
         $productModelDescendantsSaver,
         StepExecution $stepExecution,
         JobParameters $jobParameters,
-        ProductModelInterface $productModel
+        ProductModelInterface $productModel1,
+        ProductModelInterface $productModel2
     ) {
         $this->setStepExecution($stepExecution);
         $stepExecution->getJobParameters()->willReturn($jobParameters);
-        $jobParameters->get('product_model_codes')->willReturn(['tshirt_root']);
+        $jobParameters->get('product_model_codes')->willReturn(['tshirt_root', 'another_model']);
 
-        $productModelRepository->findOneByIdentifier('tshirt_root')->willReturn($productModel);
-        $productModelDescendantsSaver->save($productModel);
+        $productModelRepository->findByIdentifiers(['tshirt_root', 'another_model'])->willReturn([$productModel1, $productModel2]);
+        $productModelDescendantsSaver->save($productModel1)->shouldBeCalled();
+        $productModelDescendantsSaver->save($productModel2)->shouldBeCalled();
 
         $this->execute();
     }

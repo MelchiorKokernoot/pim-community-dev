@@ -7,6 +7,7 @@ namespace Pim\Component\Catalog\Job;
 use Akeneo\Component\Batch\Model\StepExecution;
 use Akeneo\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
 use Akeneo\Component\StorageUtils\Saver\SaverInterface;
+use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
 use Pim\Component\Connector\Step\TaskletInterface;
 
 /**
@@ -22,18 +23,18 @@ class ComputeProductModelsDescendantsCompletenessTasklet implements TaskletInter
     /** @var StepExecution */
     private $stepExecution;
 
-    /** @var IdentifiableObjectRepositoryInterface */
+    /** @var ProductModelRepositoryInterface */
     private $productModelRepository;
 
     /** @var SaverInterface */
     private $productModelDescendantsSaver;
 
     /**
-     * @param IdentifiableObjectRepositoryInterface $productModelRepository
-     * @param SaverInterface                        $productModelDescendantsSaver
+     * @param ProductModelRepositoryInterface $productModelRepository
+     * @param SaverInterface                  $productModelDescendantsSaver
      */
     public function __construct(
-        IdentifiableObjectRepositoryInterface $productModelRepository,
+        ProductModelRepositoryInterface $productModelRepository,
         SaverInterface $productModelDescendantsSaver
     ) {
         $this->productModelRepository = $productModelRepository;
@@ -55,8 +56,10 @@ class ComputeProductModelsDescendantsCompletenessTasklet implements TaskletInter
     {
         $jobParameters = $this->stepExecution->getJobParameters();
         $productModelCodes = $jobParameters->get('product_model_codes');
-        $productModel = $this->productModelRepository->findOneByIdentifier($productModelCodes[0]);
+        $productModels = $this->productModelRepository->findByIdentifiers($productModelCodes);
 
-        $this->productModelDescendantsSaver->save($productModel);
+        foreach ($productModels as $productModel) {
+            $this->productModelDescendantsSaver->save($productModel);
+        }
     }
 }
