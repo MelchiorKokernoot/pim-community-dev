@@ -169,7 +169,7 @@ jobs:
             familyColumn: family
             groupsColumn: groups
             realTimeVersioning: true
-            enabledComparison: true 
+            enabledComparison: true
             decimalSeparator: .
             dateFormat: yyyy-MM-dd
 

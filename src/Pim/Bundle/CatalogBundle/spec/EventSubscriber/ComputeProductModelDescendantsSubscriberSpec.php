@@ -14,14 +14,14 @@ use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
-class ComputeProductModelDescendantsCompletenessSubscriberSpec extends ObjectBehavior
+class ComputeProductModelDescendantsSubscriberSpec extends ObjectBehavior
 {
     function let(
         TokenStorage $tokenStorage,
         SimpleJobLauncher $jobLauncher,
         JobInstanceRepository $jobInstanceRepository
     ) {
-        $this->beConstructedWith($tokenStorage, $jobLauncher, $jobInstanceRepository, 'compute_product_models_descendants_completeness');
+        $this->beConstructedWith($tokenStorage, $jobLauncher, $jobInstanceRepository, 'compute_product_models_descendants');
     }
 
     function it_subscribes_to_events()
@@ -48,7 +48,7 @@ class ComputeProductModelDescendantsCompletenessSubscriberSpec extends ObjectBeh
         $tokenStorage->getToken()->willReturn($token);
         $token->getUser()->willReturn($user);
 
-        $jobInstanceRepository->findOneByIdentifier('compute_product_models_descendants_completeness')
+        $jobInstanceRepository->findOneByIdentifier('compute_product_models_descendants')
             ->willReturn($jobInstance);
 
         $jobLauncher->launch($jobInstance, $user, ['product_model_codes' => ['product_model_code']])
@@ -75,7 +75,7 @@ class ComputeProductModelDescendantsCompletenessSubscriberSpec extends ObjectBeh
         $tokenStorage->getToken()->willReturn($token);
         $token->getUser()->willReturn($user);
 
-        $jobInstanceRepository->findOneByIdentifier('compute_product_models_descendants_completeness')
+        $jobInstanceRepository->findOneByIdentifier('compute_product_models_descendants')
             ->willReturn($jobInstance);
 
         $jobLauncher->launch($jobInstance, $user, ['product_model_codes' => ['jambon', 'fromage']])
