@@ -4,9 +4,11 @@ namespace spec\Pim\Bundle\EnrichBundle\Normalizer;
 
 use Akeneo\Component\FileStorage\Model\FileInfoInterface;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use PhpSpec\ObjectBehavior;
 use Pim\Bundle\CatalogBundle\Filter\CollectionFilterInterface;
+use Pim\Bundle\EnrichBundle\Normalizer\EntityWithFamilyVariantNormalizer;
 use Pim\Bundle\EnrichBundle\Normalizer\FileNormalizer;
 use Pim\Bundle\EnrichBundle\Provider\Form\FormProviderInterface;
 use Pim\Bundle\EnrichBundle\Provider\StructureVersion\StructureVersionProviderInterface;
@@ -18,9 +20,14 @@ use Pim\Component\Catalog\Localization\Localizer\AttributeConverterInterface;
 use Pim\Component\Catalog\Manager\CompletenessManager;
 use Pim\Component\Catalog\Model\AssociationInterface;
 use Pim\Component\Catalog\Model\AssociationTypeInterface;
+use Pim\Component\Catalog\Model\AttributeInterface;
+use Pim\Component\Catalog\Model\FamilyVariantInterface;
 use Pim\Component\Catalog\Model\GroupInterface;
 use Pim\Component\Catalog\Model\ProductInterface;
+use Pim\Component\Catalog\Model\ProductModelInterface;
 use Pim\Component\Catalog\Model\ValueInterface;
+use Pim\Component\Catalog\Model\VariantAttributeSetInterface;
+use Pim\Component\Catalog\Model\VariantProductInterface;
 use Pim\Component\Catalog\Repository\ChannelRepositoryInterface;
 use Pim\Component\Catalog\Repository\LocaleRepositoryInterface;
 use Pim\Component\Catalog\ValuesFiller\EntityWithFamilyValuesFillerInterface;
@@ -48,7 +55,8 @@ class ProductNormalizerSpec extends ObjectBehavior
         CompletenessCalculatorInterface $completenessCalculator,
         FileNormalizer $fileNormalizer,
         ProductBuilderInterface $productBuilder,
-        EntityWithFamilyValuesFillerInterface $productValuesFiller
+        EntityWithFamilyValuesFillerInterface $productValuesFiller,
+        EntityWithFamilyVariantNormalizer $entityWithFamilyVariantNormalizer
     ) {
         $this->beConstructedWith(
             $productNormalizer,
@@ -68,7 +76,8 @@ class ProductNormalizerSpec extends ObjectBehavior
             $completenessCalculator,
             $fileNormalizer,
             $productBuilder,
-            $productValuesFiller
+            $productValuesFiller,
+            $entityWithFamilyVariantNormalizer
         );
     }
 
@@ -77,7 +86,7 @@ class ProductNormalizerSpec extends ObjectBehavior
         $this->supportsNormalization($mug, 'internal_api')->shouldReturn(true);
     }
 
-    function it_normalize_products(
+    function it_normalizes_products(
         $productNormalizer,
         $versionNormalizer,
         $versionManager,
@@ -196,6 +205,211 @@ class ProductNormalizerSpec extends ObjectBehavior
                     'image'             => [
                         'filePath'         => '/p/i/m/4/all.png',
                         'originalFileName' => 'all.png',
+                    ],
+                    'navigation' => null,
+                    'label'             => [
+                        'en_US' => 'A nice Mug!',
+                        'fr_FR' => 'Un très beau Mug !'
+                    ],
+                    'associations'      => [
+                        'group' => ['groupIds' => [12]]
+                    ]
+                ]
+            ]
+        );
+    }
+
+    function it_normalizes_variant_products(
+        $productNormalizer,
+        $versionNormalizer,
+        $versionManager,
+        $localeRepository,
+        $structureVersionProvider,
+        $formProvider,
+        $localizedConverter,
+        $productValueConverter,
+        $channelRepository,
+        $userContext,
+        $collectionFilter,
+        $fileNormalizer,
+        $productBuilder,
+        $productValuesFiller,
+        $entityWithFamilyVariantNormalizer,
+        VariantProductInterface $mug,
+        AssociationInterface $upsell,
+        AssociationTypeInterface $groupType,
+        GroupInterface $group,
+        ArrayCollection $groups,
+        ValueInterface $image,
+        ProductModelInterface $productModel,
+        ProductModelInterface $rootProductModel,
+        AttributeInterface $pictureAttribute,
+        AttributeInterface $sizeAttribute,
+        FamilyVariantInterface $familyVariant,
+        FileInfoInterface $dataImage,
+        VariantAttributeSetInterface $attributeSet,
+        VariantAttributeSetInterface $attributeSetProducts,
+        Collection $attributeSets,
+        \ArrayIterator $attributeSetsIterator,
+        Collection $axesSets,
+        \ArrayIterator $axesSetsIterator,
+        Collection $axesSetsProducts,
+        \ArrayIterator $axesSetsProductsIterator
+    ) {
+        $options = [
+            'decimal_separator' => ',',
+            'date_format'       => 'dd/MM/yyyy',
+        ];
+
+        $productNormalized = [
+            'enabled'    => true,
+            'categories' => ['kitchen'],
+            'family'     => '',
+            'values' => [
+                'normalized_property' => [['data' => 'a nice normalized property', 'locale' => null, 'scope' => null]],
+                'number'              => [['data' => 12.5000, 'locale' => null, 'scope' => null]],
+                'metric'              => [['data' => 12.5000, 'locale' => null, 'scope' => null]],
+                'prices'              => [['data' => 12.5, 'locale' => null, 'scope' => null]],
+                'date'                => [['data' => '2015-01-31', 'locale' => null, 'scope' => null]],
+                'picture'             => [['data' => 'a/b/c/my_picture.jpg', 'locale' => null, 'scope' => null]]
+            ]
+        ];
+
+        $valuesLocalized = [
+            'normalized_property' => [['data' => 'a nice normalized property', 'locale' => null, 'scope' => null]],
+            'number'              => [['data' => '12,5000', 'locale' => null, 'scope' => null]],
+            'metric'              => [['data' => '12,5000', 'locale' => null, 'scope' => null]],
+            'prices'              => [['data' => '12,5', 'locale' => null, 'scope' => null]],
+            'date'                => [['data' => '31/01/2015', 'locale' => null, 'scope' => null]],
+            'picture'             => [['data' => 'a/b/c/my_picture.jpg', 'locale' => null, 'scope' => null]]
+        ];
+
+        $productNormalizer->normalize($mug, 'standard', $options)->willReturn($productNormalized);
+        $localizedConverter->convertToLocalizedFormats($productNormalized['values'], $options)->willReturn($valuesLocalized);
+
+        $valuesConverted = $valuesLocalized;
+        $valuesConverted['picture'] = [
+            [
+                'data' => [
+                    'filePath' => 'a/b/c/my_picture.jpg', 'originalFilename' => 'my_picture.jpg'
+                ],
+                'locale' => null,
+                'scope' => null
+            ]
+        ];
+
+        $channelRepository->getFullChannels()->willReturn([]);
+        $userContext->getUserLocales()->willReturn([]);
+        $collectionFilter->filterCollection([], 'pim.internal_api.locale.view')->willReturn([]);
+
+        $productValueConverter->convert($valuesLocalized)->willReturn($valuesConverted);
+
+        $mug->getId()->willReturn(12);
+        $versionManager->getOldestLogEntry($mug)->willReturn('create_version');
+        $versionNormalizer->normalize('create_version', 'internal_api')->willReturn('normalized_create_version');
+        $versionManager->getNewestLogEntry($mug)->willReturn('update_version');
+        $versionNormalizer->normalize('update_version', 'internal_api')->willReturn('normalized_update_version');
+
+        $localeRepository->getActivatedLocaleCodes()->willReturn(['en_US', 'fr_FR']);
+        $mug->getLabel('en_US')->willReturn('A nice Mug!');
+        $mug->getLabel('fr_FR')->willReturn('Un très beau Mug !');
+        $mug->getImage()->willReturn($image);
+        $image->getData()->willReturn($dataImage);
+        $fileNormalizer->normalize($dataImage, Argument::any(), Argument::any())->willReturn([
+            'filePath'         => '/p/i/m/4/all.png',
+            'originalFileName' => 'all.png',
+        ]);
+
+        $mug->getAssociations()->willReturn([$upsell]);
+        $upsell->getAssociationType()->willReturn($groupType);
+        $groupType->getCode()->willReturn('group');
+        $upsell->getGroups()->willReturn($groups);
+        $groups->toArray()->willReturn([$group]);
+        $group->getId()->willReturn(12);
+
+        $mug->getCompletenesses()->willReturn(new ArrayCollection(['']));
+
+        $structureVersionProvider->getStructureVersion()->willReturn(12);
+        $formProvider->getForm($mug)->willReturn('product-edit-form');
+
+        $productBuilder->addMissingAssociations($mug)->shouldBeCalled();
+        $productValuesFiller->fillMissingValues($mug)->shouldBeCalled();
+
+        $mug->getFamilyVariant()->willReturn($familyVariant);
+
+        $attributeSets->getIterator()->willReturn($attributeSetsIterator);
+        $attributeSetsIterator->rewind()->shouldBeCalled();
+        $attributeSetsIterator->valid()->willReturn(true, true, false);
+        $attributeSetsIterator->current()->willReturn($attributeSet, $attributeSetProducts);
+        $attributeSetsIterator->next()->shouldBeCalled();
+
+        $axesSets->getIterator()->willReturn($axesSetsIterator);
+        $axesSetsIterator->rewind()->shouldBeCalled();
+        $axesSetsIterator->valid()->willReturn(true, true, false);
+        $axesSetsIterator->current()->willReturn($pictureAttribute);
+        $axesSetsIterator->next()->shouldBeCalled();
+
+        $axesSetsProducts->getIterator()->willReturn($axesSetsProductsIterator);
+        $axesSetsProductsIterator->rewind()->shouldBeCalled();
+        $axesSetsProductsIterator->valid()->willReturn(true, true, false);
+        $axesSetsProductsIterator->current()->willReturn($sizeAttribute);
+        $axesSetsProductsIterator->next()->shouldBeCalled();
+
+        $entityWithFamilyVariantNormalizer->normalize($rootProductModel, 'internal_api', $options)
+            ->willReturn('ROOT NORMALIZED');
+        $entityWithFamilyVariantNormalizer->normalize($productModel, 'internal_api', $options)
+            ->willReturn('PRODUCT MODEL NORMALIZED');
+        $entityWithFamilyVariantNormalizer->normalize($mug, 'internal_api', $options)
+            ->willReturn('CURRENT ENTITY NORMALIZED');
+        $mug->getParent()->willReturn($productModel);
+        $productModel->getParent()->willReturn($rootProductModel);
+        $familyVariant->getVariantAttributeSets()->willReturn($attributeSets);
+        $familyVariant->getNumberOfLevel()->willReturn(2);
+        $attributeSet->getLevel()->willReturn(1);
+        $attributeSet->getAxes()->willReturn($axesSets);
+        $attributeSetProducts->getLevel()->willReturn(2);
+        $attributeSetProducts->getAxes()->willReturn($axesSetsProducts);
+        $pictureAttribute->setLocale('en_US')->shouldBeCalled();
+        $pictureAttribute->setLocale('fr_FR')->shouldBeCalled();
+        $pictureAttribute->getLabel()->willReturn('Picture');
+        $sizeAttribute->setLocale('en_US')->shouldBeCalled();
+        $sizeAttribute->setLocale('fr_FR')->shouldBeCalled();
+        $sizeAttribute->getLabel()->willReturn('Size');
+
+        $this->normalize($mug, 'internal_api', $options)->shouldReturn(
+            [
+                'enabled'    => true,
+                'categories' => ['kitchen'],
+                'family'     => '',
+                'values'     => $valuesConverted,
+                'meta'       => [
+                    'form'              => 'product-edit-form',
+                    'id'                => 12,
+                    'created'           => 'normalized_create_version',
+                    'updated'           => 'normalized_update_version',
+                    'model_type'        => 'product',
+                    'structure_version' => 12,
+                    'completenesses'    => null,
+                    'image'             => [
+                        'filePath'         => '/p/i/m/4/all.png',
+                        'originalFileName' => 'all.png',
+                    ],
+                    'navigation' => [
+                        'root'      => 'ROOT NORMALIZED',
+                        'level_one' => [
+                            'axes'     => [
+                                'en_US' => 'Picture',
+                                'fr_FR' => 'Picture'
+                            ],
+                            'selected' => 'PRODUCT MODEL NORMALIZED',
+                        ],
+                        'level_two' => [
+                            'axes'     => [
+                                'en_US' => 'Size',
+                                'fr_FR' => 'Size'
+                            ],
+                            'selected' => 'CURRENT ENTITY NORMALIZED',
+                        ],
                     ],
                     'label'             => [
                         'en_US' => 'A nice Mug!',

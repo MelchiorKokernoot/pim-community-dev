@@ -1,0 +1,9 @@
+<div class="AknProductVariantBreadcrumb-listItem">
+    <img class="AknProductVariantBreadcrumb-listProductImage" src="<%- entity.image %>" alt="">
+    <span class="AknProductVariantBreadcrumb-listProductLabel">
+        <%- entity.label %>
+    </span>
+    <span class="AknProductVariantBreadcrumb-listProductCompleteness AknProductVariantBreadcrumb-listProductCompleteness--<%- (100 == entity.completeness.ratio) ? 'complete' : 'incomplete' %>">
+        <%- entity.completeness.ratio %>%
+    </span>
+</div>

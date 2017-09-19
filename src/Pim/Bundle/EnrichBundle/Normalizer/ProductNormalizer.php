@@ -14,6 +14,7 @@ use Pim\Component\Catalog\Localization\Localizer\AttributeConverterInterface;
 use Pim\Component\Catalog\Manager\CompletenessManager;
 use Pim\Component\Catalog\Model\ProductInterface;
 use Pim\Component\Catalog\Model\ValueInterface;
+use Pim\Component\Catalog\Model\VariantProductInterface;
 use Pim\Component\Catalog\Repository\ChannelRepositoryInterface;
 use Pim\Component\Catalog\Repository\LocaleRepositoryInterface;
 use Pim\Component\Catalog\ValuesFiller\EntityWithFamilyValuesFillerInterface;
@@ -86,6 +87,9 @@ class ProductNormalizer implements NormalizerInterface
     /** @var EntityWithFamilyValuesFillerInterface */
     protected $productValuesFiller;
 
+    /** @var EntityWithFamilyVariantNormalizer */
+    protected $entityWithFamilyVariantNormalizer;
+
     /**
      * @param NormalizerInterface                   $productNormalizer
      * @param NormalizerInterface                   $versionNormalizer
@@ -105,6 +109,7 @@ class ProductNormalizer implements NormalizerInterface
      * @param FileNormalizer                        $fileNormalizer
      * @param ProductBuilderInterface               $productBuilder
      * @param EntityWithFamilyValuesFillerInterface $productValuesFiller
+     * @param EntityWithFamilyVariantNormalizer     $entityWithFamilyVariantNormalizer
      */
     public function __construct(
         NormalizerInterface $productNormalizer,
@@ -124,7 +129,8 @@ class ProductNormalizer implements NormalizerInterface
         CompletenessCalculatorInterface $completenessCalculator,
         FileNormalizer $fileNormalizer,
         ProductBuilderInterface $productBuilder,
-        EntityWithFamilyValuesFillerInterface $productValuesFiller
+        EntityWithFamilyValuesFillerInterface $productValuesFiller,
+        EntityWithFamilyVariantNormalizer $entityWithFamilyVariantNormalizer
     ) {
         $this->productNormalizer                = $productNormalizer;
         $this->versionNormalizer                = $versionNormalizer;
@@ -143,7 +149,8 @@ class ProductNormalizer implements NormalizerInterface
         $this->completenessCalculator           = $completenessCalculator;
         $this->fileNormalizer                   = $fileNormalizer;
         $this->productBuilder                   = $productBuilder;
-        $this->productValuesFiller = $productValuesFiller;
+        $this->productValuesFiller              = $productValuesFiller;
+        $this->entityWithFamilyVariantNormalizer = $entityWithFamilyVariantNormalizer;
     }
 
     /**
@@ -176,6 +183,7 @@ class ProductNormalizer implements NormalizerInterface
             'structure_version' => $this->structureVersionProvider->getStructureVersion(),
             'completenesses'    => $this->getNormalizedCompletenesses($product),
             'image'             => $this->normalizeImage($product->getImage(), $format, $context),
+            'navigation'        => $this->normalizeNavigation($product, $format, $context),
         ] + $this->getLabels($product) + $this->getAssociationMeta($product);
 
         return $normalizedProduct;
@@ -261,5 +269,91 @@ class ProductNormalizer implements NormalizerInterface
         }
 
         return $this->fileNormalizer->normalize($data->getData(), $format, $context);
+    }
+
+    /**
+     * Normalize navigation information of the given $product.
+     *
+     * @param ProductInterface $product
+     * @param string           $format
+     * @param array            $context
+     *
+     * @throws \LogicException
+     *
+     * @return array
+     */
+    private function normalizeNavigation(
+        ProductInterface $product,
+        string $format,
+        array $context = []
+    ): ?array {
+        if (!$product instanceof VariantProductInterface) {
+            return null;
+        }
+
+        $localeCodes = $this->localeRepository->getActivatedLocaleCodes();
+
+        $navigationData = [
+            'root'      => null,
+            'level_one' => [
+                'axes'     => [],
+                'selected' => null,
+            ],
+            'level_two' => [
+                'axes'     => [],
+                'selected' => null,
+            ],
+        ];
+
+        foreach ($product->getFamilyVariant()->getVariantAttributeSets() as $attributeSet) {
+            $level = (1 === $attributeSet->getLevel()) ? 'level_one' : 'level_two';
+            foreach ($attributeSet->getAxes() as $axis) {
+                foreach ($localeCodes as $localeCode) {
+                    $axis->setLocale($localeCode);
+                    $navigationData[$level]['axes'][$localeCode] = $axis->getLabel();
+                }
+            }
+        }
+
+        $nbOfLevel = $product->getFamilyVariant()->getNumberOfLevel();
+
+        if (1 === $nbOfLevel) {
+            $navigationData['root'] = $this->entityWithFamilyVariantNormalizer->normalize(
+                $product->getParent(),
+                $format,
+                $context
+            );
+            $navigationData['level_one']['selected'] = $this->entityWithFamilyVariantNormalizer->normalize(
+                $product,
+                $format,
+                $context
+            );
+
+            return $navigationData;
+        }
+
+        if (2 === $nbOfLevel) {
+            $navigationData['root'] = $this->entityWithFamilyVariantNormalizer->normalize(
+                $product->getParent()->getParent(),
+                $format,
+                $context
+            );
+            $navigationData['level_one']['selected'] = $this->entityWithFamilyVariantNormalizer->normalize(
+                $product->getParent(),
+                $format,
+                $context
+            );
+            $navigationData['level_two']['selected'] = $this->entityWithFamilyVariantNormalizer->normalize(
+                $product,
+                $format,
+                $context
+            );
+
+            return $navigationData;
+        }
+
+        throw new \LogicException(sprintf(
+            'This normalize does not support more than 2 levels of variation, %s given', $nbOfLevel
+        ));
     }
 }

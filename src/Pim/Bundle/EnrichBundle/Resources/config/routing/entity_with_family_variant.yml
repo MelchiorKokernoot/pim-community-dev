@@ -1,0 +1,4 @@
+pim_enrich_entity_with_family_variant_rest_children:
+    path: /rest
+    defaults: { _controller: pim_enrich.controller.rest.entity_with_family_variant:childrenAction }
+    methods: [GET]

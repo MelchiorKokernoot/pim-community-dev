@@ -2,8 +2,9 @@
 
 namespace spec\Pim\Bundle\EnrichBundle\Normalizer;
 
+use Doctrine\Common\Collections\Collection;
 use PhpSpec\ObjectBehavior;
-use Pim\Bundle\EnrichBundle\Normalizer\FileNormalizer;
+use Pim\Bundle\EnrichBundle\Normalizer\EntityWithFamilyVariantNormalizer;
 use Pim\Bundle\EnrichBundle\Provider\Form\FormProviderInterface;
 use Pim\Bundle\VersioningBundle\Manager\VersionManager;
 use Pim\Component\Catalog\FamilyVariant\EntityWithFamilyVariantAttributesProvider;
@@ -13,6 +14,7 @@ use Pim\Component\Catalog\Model\FamilyInterface;
 use Pim\Component\Catalog\Model\FamilyVariantInterface;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Pim\Component\Catalog\Model\ValueInterface;
+use Pim\Component\Catalog\Model\VariantAttributeSetInterface;
 use Pim\Component\Catalog\Repository\LocaleRepositoryInterface;
 use Pim\Component\Catalog\ValuesFiller\EntityWithFamilyValuesFillerInterface;
 use Pim\Component\Enrich\Converter\ConverterInterface;
@@ -31,7 +33,8 @@ class ProductModelNormalizerSpec extends ObjectBehavior
         FormProviderInterface $formProvider,
         LocaleRepositoryInterface $localeRepository,
         EntityWithFamilyValuesFillerInterface $entityValuesFiller,
-        EntityWithFamilyVariantAttributesProvider $attributesProvider
+        EntityWithFamilyVariantAttributesProvider $attributesProvider,
+        EntityWithFamilyVariantNormalizer $entityWithFamilyVariantNormalizer
     ) {
         $this->beConstructedWith(
             $normalizer,
@@ -43,7 +46,8 @@ class ProductModelNormalizerSpec extends ObjectBehavior
             $formProvider,
             $localeRepository,
             $entityValuesFiller,
-            $attributesProvider
+            $attributesProvider,
+            $entityWithFamilyVariantNormalizer
         );
     }
 
@@ -62,11 +66,17 @@ class ProductModelNormalizerSpec extends ObjectBehavior
         $formProvider,
         $localeRepository,
         $attributesProvider,
+        $entityWithFamilyVariantNormalizer,
         AttributeInterface $pictureAttribute,
         ProductModelInterface $productModel,
         FamilyVariantInterface $familyVariant,
         FamilyInterface $family,
-        ValueInterface $picture
+        ValueInterface $picture,
+        VariantAttributeSetInterface $attributeSet,
+        Collection $attributeSets,
+        \ArrayIterator $attributeSetsIterator,
+        Collection $axesSets,
+        \ArrayIterator $axesSetsIterator
     ) {
         $options = [
             'decimal_separator' => ',',
@@ -149,6 +159,28 @@ class ProductModelNormalizerSpec extends ObjectBehavior
 
         $formProvider->getForm($productModel)->willReturn('pim-product-model-edit-form');
 
+        $attributeSets->getIterator()->willReturn($attributeSetsIterator);
+        $attributeSetsIterator->rewind()->shouldBeCalled();
+        $attributeSetsIterator->valid()->willReturn(true, true, false);
+        $attributeSetsIterator->current()->willReturn($attributeSet);
+        $attributeSetsIterator->next()->shouldBeCalled();
+
+        $axesSets->getIterator()->willReturn($axesSetsIterator);
+        $axesSetsIterator->rewind()->shouldBeCalled();
+        $axesSetsIterator->valid()->willReturn(true, true, false);
+        $axesSetsIterator->current()->willReturn($pictureAttribute);
+        $axesSetsIterator->next()->shouldBeCalled();
+
+        $productModel->getParent()->willReturn(null);
+        $entityWithFamilyVariantNormalizer->normalize($productModel, 'internal_api', $options)
+            ->willReturn('ROOT NORMALIZED');
+        $familyVariant->getVariantAttributeSets()->willReturn($attributeSets);
+        $attributeSet->getLevel()->willReturn(1);
+        $attributeSet->getAxes()->willReturn($axesSets);
+        $pictureAttribute->setLocale('en_US')->shouldBeCalled();
+        $pictureAttribute->setLocale('fr_FR')->shouldBeCalled();
+        $pictureAttribute->getLabel()->willReturn('Picture');
+
         $this->normalize($productModel, 'internal_api', $options)->shouldReturn(
             [
                 'code'           => 'tshirt_blue',
@@ -166,6 +198,20 @@ class ProductModelNormalizerSpec extends ObjectBehavior
                     'attributes_for_this_level' => ['picture'],
                     'attributes_axes' => ['picture'],
                     'image'          => $fileNormalized,
+                    'navigation' => [
+                        'root'      => 'ROOT NORMALIZED',
+                        'level_one' => [
+                            'axes'     => [
+                                'en_US' => 'Picture',
+                                'fr_FR' => 'Picture'
+                            ],
+                            'selected' => null,
+                        ],
+                        'level_two' => [
+                            'axes'     => [],
+                            'selected' => null,
+                        ],
+                    ],
                     'label'          => [
                         'en_US' => 'Tshirt blue',
                         'fr_FR' => 'Tshirt bleu',
@@ -185,11 +231,17 @@ class ProductModelNormalizerSpec extends ObjectBehavior
         $formProvider,
         $localeRepository,
         $attributesProvider,
+        $entityWithFamilyVariantNormalizer,
         AttributeInterface $pictureAttribute,
         ProductModelInterface $productModel,
         FamilyVariantInterface $familyVariant,
         FamilyInterface $family,
-        ValueInterface $picture
+        ValueInterface $picture,
+        VariantAttributeSetInterface $attributeSet,
+        Collection $attributeSets,
+        \ArrayIterator $attributeSetsIterator,
+        Collection $axesSets,
+        \ArrayIterator $axesSetsIterator
     ) {
         $options = [
             'decimal_separator' => ',',
@@ -260,6 +312,28 @@ class ProductModelNormalizerSpec extends ObjectBehavior
 
         $formProvider->getForm($productModel)->willReturn('pim-product-model-edit-form');
 
+        $attributeSets->getIterator()->willReturn($attributeSetsIterator);
+        $attributeSetsIterator->rewind()->shouldBeCalled();
+        $attributeSetsIterator->valid()->willReturn(true, true, false);
+        $attributeSetsIterator->current()->willReturn($attributeSet);
+        $attributeSetsIterator->next()->shouldBeCalled();
+
+        $axesSets->getIterator()->willReturn($axesSetsIterator);
+        $axesSetsIterator->rewind()->shouldBeCalled();
+        $axesSetsIterator->valid()->willReturn(true, true, false);
+        $axesSetsIterator->current()->willReturn($pictureAttribute);
+        $axesSetsIterator->next()->shouldBeCalled();
+
+        $productModel->getParent()->willReturn(null);
+        $entityWithFamilyVariantNormalizer->normalize($productModel, 'internal_api', $options)
+            ->willReturn('ROOT NORMALIZED');
+        $familyVariant->getVariantAttributeSets()->willReturn($attributeSets);
+        $attributeSet->getLevel()->willReturn(1);
+        $attributeSet->getAxes()->willReturn($axesSets);
+        $pictureAttribute->setLocale('en_US')->shouldBeCalled();
+        $pictureAttribute->setLocale('fr_FR')->shouldBeCalled();
+        $pictureAttribute->getLabel()->willReturn('Picture');
+
         $this->normalize($productModel, 'internal_api', $options)->shouldReturn(
             [
                 'code'           => 'tshirt_blue',
@@ -277,6 +351,206 @@ class ProductModelNormalizerSpec extends ObjectBehavior
                     'attributes_for_this_level' => ['picture'],
                     'attributes_axes' => ['picture'],
                     'image'          => null,
+                    'navigation' => [
+                        'root'      => 'ROOT NORMALIZED',
+                        'level_one' => [
+                            'axes'     => [
+                                'en_US' => 'Picture',
+                                'fr_FR' => 'Picture'
+                            ],
+                            'selected' => null,
+                        ],
+                        'level_two' => [
+                            'axes'     => [],
+                            'selected' => null,
+                        ],
+                    ],
+                    'label'          => [
+                        'en_US' => 'Tshirt blue',
+                        'fr_FR' => 'Tshirt bleu',
+                    ]
+                ]
+            ]
+        );
+    }
+
+    function it_normalizes_product_models_without_multiple_levels(
+        $normalizer,
+        $versionNormalizer,
+        $fileNormalizer,
+        $versionManager,
+        $localizedConverter,
+        $productValueConverter,
+        $formProvider,
+        $localeRepository,
+        $attributesProvider,
+        $entityWithFamilyVariantNormalizer,
+        AttributeInterface $pictureAttribute,
+        AttributeInterface $sizeAttribute,
+        ProductModelInterface $productModel,
+        ProductModelInterface $rootProductModel,
+        FamilyVariantInterface $familyVariant,
+        FamilyInterface $family,
+        ValueInterface $picture,
+        VariantAttributeSetInterface $attributeSet,
+        VariantAttributeSetInterface $attributeSetProducts,
+        Collection $attributeSets,
+        \ArrayIterator $attributeSetsIterator,
+        Collection $axesSets,
+        \ArrayIterator $axesSetsIterator,
+        Collection $axesSetsProducts,
+        \ArrayIterator $axesSetsProductsIterator
+    ) {
+        $options = [
+            'decimal_separator' => ',',
+            'date_format'       => 'dd/MM/yyyy',
+        ];
+
+        $productModelNormalized = [
+            'code'           => 'tshirt_blue',
+            'family_variant' => 'tshirts_color',
+            'family'         => 'tshirts',
+            'categories'     => ['summer'],
+            'values'         => [
+                'normalized_property' => [['data' => 'a nice normalized property', 'locale' => null, 'scope' => null]],
+                'number'              => [['data' => 12.5000, 'locale' => null, 'scope' => null]],
+                'metric'              => [['data' => 12.5000, 'locale' => null, 'scope' => null]],
+                'prices'              => [['data' => 12.5, 'locale' => null, 'scope' => null]],
+                'date'                => [['data' => '2015-01-31', 'locale' => null, 'scope' => null]],
+                'picture'             => [['data' => 'a/b/c/my_picture.jpg', 'locale' => null, 'scope' => null]]
+            ]
+        ];
+
+        $familyVariantNormalized = [
+            'code'                   => 'tshirts_color',
+            'labels'                 => ['en_US' => 'Tshirts Color', 'fr_FR' => 'Tshirt Couleur'],
+            'family'                 => 'tshirts',
+            'variant_attribute_sets' => []
+        ];
+
+        $fileNormalized = [
+            'filePath' => 'a/b/c/my_picture.jpg',
+            'originalFilename' => 'my_picture.jpg'
+        ];
+
+        $valuesLocalized = [
+            'normalized_property' => [['data' => 'a nice normalized property', 'locale' => null, 'scope' => null]],
+            'number'              => [['data' => '12,5000', 'locale' => null, 'scope' => null]],
+            'metric'              => [['data' => '12,5000', 'locale' => null, 'scope' => null]],
+            'prices'              => [['data' => '12,5', 'locale' => null, 'scope' => null]],
+            'date'                => [['data' => '31/01/2015', 'locale' => null, 'scope' => null]],
+            'picture'             => [['data' => 'a/b/c/my_picture.jpg', 'locale' => null, 'scope' => null]]
+        ];
+
+        $normalizer->normalize($productModel, 'standard', $options)->willReturn($productModelNormalized);
+        $localizedConverter->convertToLocalizedFormats($productModelNormalized['values'], $options)->willReturn($valuesLocalized);
+
+        $valuesConverted = $valuesLocalized;
+        $valuesConverted['picture'] = [
+            [
+                'data' => $fileNormalized,
+                'locale' => null,
+                'scope' => null
+            ]
+        ];
+
+        $attributesProvider->getAttributes($productModel)->willReturn([$pictureAttribute]);
+        $attributesProvider->getAxes($productModel)->willReturn([$pictureAttribute]);
+        $pictureAttribute->getCode()->willReturn('picture');
+
+        $localeRepository->getActivatedLocaleCodes()->willReturn(['en_US', 'fr_FR']);
+        $productModel->getLabel('en_US')->willReturn('Tshirt blue');
+        $productModel->getLabel('fr_FR')->willReturn('Tshirt bleu');
+
+        $productModel->getImage()->willReturn($picture);
+        $picture->getData()->willReturn('IMAGE_DATA');
+        $fileNormalizer->normalize('IMAGE_DATA', 'internal_api', $options)->willReturn($fileNormalized);
+
+        $productValueConverter->convert($valuesLocalized)->willReturn($valuesConverted);
+
+        $productModel->getId()->willReturn(12);
+        $productModel->getCode()->willReturn('tshirt_blue');
+        $versionManager->getOldestLogEntry($productModel)->willReturn('create_version');
+        $versionNormalizer->normalize('create_version', 'internal_api')->willReturn('normalized_create_version');
+        $versionManager->getNewestLogEntry($productModel)->willReturn('update_version');
+        $versionNormalizer->normalize('update_version', 'internal_api')->willReturn('normalized_update_version');
+
+        $productModel->getFamilyVariant()->willReturn($familyVariant);
+        $familyVariant->getFamily()->willReturn($family);
+        $family->getCode()->willReturn('tshirts');
+        $normalizer->normalize($familyVariant, 'standard')->willReturn($familyVariantNormalized);
+
+        $formProvider->getForm($productModel)->willReturn('pim-product-model-edit-form');
+
+        $attributeSets->getIterator()->willReturn($attributeSetsIterator);
+        $attributeSetsIterator->rewind()->shouldBeCalled();
+        $attributeSetsIterator->valid()->willReturn(true, true, false);
+        $attributeSetsIterator->current()->willReturn($attributeSet, $attributeSetProducts);
+        $attributeSetsIterator->next()->shouldBeCalled();
+
+        $axesSets->getIterator()->willReturn($axesSetsIterator);
+        $axesSetsIterator->rewind()->shouldBeCalled();
+        $axesSetsIterator->valid()->willReturn(true, true, false);
+        $axesSetsIterator->current()->willReturn($pictureAttribute);
+        $axesSetsIterator->next()->shouldBeCalled();
+
+        $axesSetsProducts->getIterator()->willReturn($axesSetsProductsIterator);
+        $axesSetsProductsIterator->rewind()->shouldBeCalled();
+        $axesSetsProductsIterator->valid()->willReturn(true, true, false);
+        $axesSetsProductsIterator->current()->willReturn($sizeAttribute);
+        $axesSetsProductsIterator->next()->shouldBeCalled();
+
+        $productModel->getParent()->willReturn($rootProductModel);
+        $entityWithFamilyVariantNormalizer->normalize($rootProductModel, 'internal_api', $options)
+            ->willReturn('ROOT NORMALIZED');
+        $entityWithFamilyVariantNormalizer->normalize($productModel, 'internal_api', $options)
+            ->willReturn('CURRENT ENTITY NORMALIZED');
+        $familyVariant->getVariantAttributeSets()->willReturn($attributeSets);
+        $attributeSet->getLevel()->willReturn(1);
+        $attributeSet->getAxes()->willReturn($axesSets);
+        $attributeSetProducts->getLevel()->willReturn(2);
+        $attributeSetProducts->getAxes()->willReturn($axesSetsProducts);
+        $pictureAttribute->setLocale('en_US')->shouldBeCalled();
+        $pictureAttribute->setLocale('fr_FR')->shouldBeCalled();
+        $pictureAttribute->getLabel()->willReturn('Picture');
+        $sizeAttribute->setLocale('en_US')->shouldBeCalled();
+        $sizeAttribute->setLocale('fr_FR')->shouldBeCalled();
+        $sizeAttribute->getLabel()->willReturn('Size');
+
+        $this->normalize($productModel, 'internal_api', $options)->shouldReturn(
+            [
+                'code'           => 'tshirt_blue',
+                'family_variant' => 'tshirts_color',
+                'family'         => 'tshirts',
+                'categories'     => ['summer'],
+                'values'         => $valuesConverted,
+                'meta'           => [
+                    'family_variant' => $familyVariantNormalized,
+                    'form'           => 'pim-product-model-edit-form',
+                    'id'             => 12,
+                    'created'        => 'normalized_create_version',
+                    'updated'        => 'normalized_update_version',
+                    'model_type'     => 'product_model',
+                    'attributes_for_this_level' => ['picture'],
+                    'attributes_axes' => ['picture'],
+                    'image'          => $fileNormalized,
+                    'navigation' => [
+                        'root'      => 'ROOT NORMALIZED',
+                        'level_one' => [
+                            'axes'     => [
+                                'en_US' => 'Picture',
+                                'fr_FR' => 'Picture'
+                            ],
+                            'selected' => 'CURRENT ENTITY NORMALIZED',
+                        ],
+                        'level_two' => [
+                            'axes'     => [
+                                'en_US' => 'Size',
+                                'fr_FR' => 'Size'
+                            ],
+                            'selected' => null,
+                        ],
+                    ],
                     'label'          => [
                         'en_US' => 'Tshirt blue',
                         'fr_FR' => 'Tshirt bleu',

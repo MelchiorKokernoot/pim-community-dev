@@ -201,6 +201,11 @@ config:
                     options:
                         urls:
                             get: pim_enrich_job_execution_rest_get
+                entity-with-family-variant:
+                    module: pim/entity-with-family-variant-fetcher
+                    options:
+                        urls:
+                            list: pim_enrich_entity_with_family_variant_rest_children
 
         pim/controller-registry:
             defaultController:
@@ -554,6 +559,7 @@ config:
         pim/attribute-group-fetcher: pimenrich/js/fetcher/attribute-group-fetcher
         pim/locale-fetcher:          pimenrich/js/fetcher/locale-fetcher
         pim/product-fetcher:         pimenrich/js/fetcher/product-fetcher
+        pim/entity-with-family-variant-fetcher: pimenrich/js/fetcher/entity-with-family-variant-fetcher
 
         # Remover
         pim/remover/base:                pimenrich/js/remover/base-remover
@@ -667,6 +673,7 @@ config:
         pim/product-edit-form/attributes:                        pimenrich/js/product/form/attributes
         pim/product-edit-form/creation/identifier:               pimenrich/js/product/form/creation/identifier
         pim/product-edit-form/start-copy:                        pimenrich/js/product/form/start-copy
+        pim/product-edit-form/navigation/variant-breadcrumb:     pimenrich/js/product/form/navigation/variant-breadcrumb
 
         # Product model
         pim/product-model-edit-form/meta/family-variant: pimenrich/js/product-model/form/meta/family-variant
@@ -1003,6 +1010,9 @@ config:
         pim/template/product-create-error:                   pimenrich/templates/product/create-error.html
         pim/template/product/add-select/attribute/line:      pimenrich/templates/product/form/add-select/attribute/line.html
         pim/template/product/form/product-completeness:      pimenrich/templates/product/form/product-completeness.html
+        pim/template/product/form/navigation/variant-breadcrumb: pimenrich/templates/product/form/navigation/variant-breadcrumb.html
+        pim/template/product/form/navigation/variant-product: pimenrich/templates/product/form/navigation/select2-product-item.html
+        pim/template/product/form/navigation/variant-product-model: pimenrich/templates/product/form/navigation/select2-product-model-item.html
         pim/template/attribute-option/form:                  pimenrich/templates/attribute-option/form.html
         pim/template/attribute-option/validation-error:      pimenrich/templates/attribute-option/validation-error.html
         pim/template/attribute-option/index:                 pimenrich/templates/attribute-option/index.html

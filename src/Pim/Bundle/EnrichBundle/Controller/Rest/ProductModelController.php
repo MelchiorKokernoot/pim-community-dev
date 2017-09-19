@@ -181,6 +181,7 @@ class ProductModelController
      */
     private function updateProductModel(ProductModelInterface $productModel, array $data)
     {
+        unset($data['parent']);
         $values = $this->productValueConverter->convert($data['values']);
 
         $values = $this->localizedConverter->convertToDefaultFormats($values, [

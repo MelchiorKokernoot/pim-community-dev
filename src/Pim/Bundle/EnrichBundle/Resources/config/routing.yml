@@ -66,6 +66,10 @@ product_model:
     resource: '@PimEnrichBundle/Resources/config/routing/product_model.yml'
     prefix: /enrich/product-model
 
+entity_with_family_variant:
+    resource: '@PimEnrichBundle/Resources/config/routing/entity_with_family_variant.yml'
+    prefix: /enrich/entity-with-family-variant
+
 mass_edit_action:
     resource: '@PimEnrichBundle/Resources/config/routing/mass_edit_action.yml'
     prefix: /enrich/mass-edit-action

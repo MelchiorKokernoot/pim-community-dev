@@ -1,0 +1,35 @@
+<span class="AknProductVariantBreadcrumb-item <% if (0 == currentLevel) { %>AknProductVariantBreadcrumb-item--highlight<% } %>">
+    <span class="AknProductVariantBreadcrumb-axisName AknProductVariantBreadcrumb-axisValue" data-action="navigateToRoot">
+        <%- commonLabel %>
+    </span>
+</span>
+
+<span class="AknProductVariantBreadcrumb-item <% if (1 == currentLevel) { %>AknProductVariantBreadcrumb-item--highlight<% } %>">
+    <span class="AknProductVariantBreadcrumb-axisName">
+        <%- navigation.level_one.axes[currentLocale] %><% if (navigation.level_one.selected) { %>:<% } %>
+    </span>
+
+    <% if (navigation.level_one.selected) { %>
+    <span class="AknProductVariantBreadcrumb-axisValue" data-action="navigateToModel">
+        <%- navigation.level_one.selected.axes_values_labels[currentLocale] %>
+    </span>
+    <% } %>
+
+    <input type="hidden" class="product-variant-breadcrumb select-level-one select-field" value="0"/>
+</span>
+
+<% if (2 == nbOfLevels) { %>
+<span class="AknProductVariantBreadcrumb-item <% if (2 == currentLevel) { %>AknProductVariantBreadcrumb-item--highlight<% } %>">
+    <span class="AknProductVariantBreadcrumb-axisName">
+        <%- navigation.level_two.axes[currentLocale] %><% if (navigation.level_two.selected) { %>:<% } %>
+    </span>
+
+    <% if (navigation.level_two.selected) { %>
+    <span class="AknProductVariantBreadcrumb-axisValue">
+        <%- navigation.level_two.selected.axes_values_labels[currentLocale] %>
+    </span>
+    <% } %>
+
+    <input type="hidden" class="product-variant-breadcrumb select-level-two select-field" value="0"/>
+</span>
+<% } %>

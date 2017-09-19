@@ -56,6 +56,9 @@ class ProductModelNormalizer implements NormalizerInterface
     /** @var EntityWithFamilyVariantAttributesProvider */
     private $attributesProvider;
 
+    /** @var EntityWithFamilyVariantNormalizer */
+    private $entityWithFamilyVariantNormalizer;
+
     /**
      * @param NormalizerInterface                       $normalizer
      * @param NormalizerInterface                       $versionNormalizer
@@ -67,6 +70,7 @@ class ProductModelNormalizer implements NormalizerInterface
      * @param LocaleRepositoryInterface                 $localeRepository
      * @param EntityWithFamilyValuesFillerInterface     $entityValuesFiller
      * @param EntityWithFamilyVariantAttributesProvider $attributesProvider
+     * @param EntityWithFamilyVariantNormalizer         $entityWithFamilyVariantNormalizer
      */
     public function __construct(
         NormalizerInterface $normalizer,
@@ -78,7 +82,8 @@ class ProductModelNormalizer implements NormalizerInterface
         FormProviderInterface $formProvider,
         LocaleRepositoryInterface $localeRepository,
         EntityWithFamilyValuesFillerInterface $entityValuesFiller,
-        EntityWithFamilyVariantAttributesProvider $attributesProvider
+        EntityWithFamilyVariantAttributesProvider $attributesProvider,
+        EntityWithFamilyVariantNormalizer $entityWithFamilyVariantNormalizer
     ) {
         $this->normalizer            = $normalizer;
         $this->versionNormalizer     = $versionNormalizer;
@@ -90,6 +95,7 @@ class ProductModelNormalizer implements NormalizerInterface
         $this->localeRepository      = $localeRepository;
         $this->entityValuesFiller    = $entityValuesFiller;
         $this->attributesProvider    = $attributesProvider;
+        $this->entityWithFamilyVariantNormalizer = $entityWithFamilyVariantNormalizer;
     }
 
     /**
@@ -100,8 +106,6 @@ class ProductModelNormalizer implements NormalizerInterface
         $this->entityValuesFiller->fillMissingValues($productModel);
 
         $normalizedProductModel = $this->normalizer->normalize($productModel, 'standard', $context);
-        // TODO: will be handled by PIM-6741
-        unset($normalizedProductModel['parent']);
 
         $normalizedProductModel['values'] = $this->localizedConverter->convertToLocalizedFormats(
             $normalizedProductModel['values'],
@@ -139,6 +143,7 @@ class ProductModelNormalizer implements NormalizerInterface
                 'attributes_for_this_level' => $levelAttributes,
                 'attributes_axes'           => $axesAttributes,
                 'image'                     => $this->normalizeImage($productModel->getImage(), $format, $context),
+                'navigation'                => $this->normalizeNavigation($productModel, $format, $context),
             ] + $this->getLabels($productModel);
 
         return $normalizedProductModel;
@@ -182,5 +187,55 @@ class ProductModelNormalizer implements NormalizerInterface
         }
 
         return $this->fileNormalizer->normalize($data->getData(), $format, $context);
+    }
+
+    /**
+     * Normalize navigation information of the given $productModel.
+     *
+     * @param ProductModelInterface $productModel
+     * @param string                $format
+     * @param array                 $context
+     *
+     * @return array
+     */
+    private function normalizeNavigation(
+        ProductModelInterface $productModel,
+        string $format,
+        array $context = []
+    ): array {
+        $localeCodes = $this->localeRepository->getActivatedLocaleCodes();
+        $root = (null === $productModel->getParent()) ? $productModel : $productModel->getParent();
+
+        $navigationData = [
+            'root'      => $this->entityWithFamilyVariantNormalizer->normalize($root, $format, $context),
+            'level_one' => [
+                'axes'     => [],
+                'selected' => null,
+            ],
+            'level_two' => [
+                'axes'     => [],
+                'selected' => null,
+            ],
+        ];
+
+        foreach ($productModel->getFamilyVariant()->getVariantAttributeSets() as $attributeSet) {
+            $level = (1 === $attributeSet->getLevel()) ? 'level_one' : 'level_two';
+            foreach ($attributeSet->getAxes() as $axis) {
+                foreach ($localeCodes as $localeCode) {
+                    $axis->setLocale($localeCode);
+                    $navigationData[$level]['axes'][$localeCode] = $axis->getLabel();
+                }
+            }
+        }
+
+        if (null !== $productModel->getParent()) {
+            $navigationData['level_one']['selected'] = $this->entityWithFamilyVariantNormalizer->normalize(
+                $productModel,
+                $format,
+                $context
+            );
+        }
+
+        return $navigationData;
     }
 }
