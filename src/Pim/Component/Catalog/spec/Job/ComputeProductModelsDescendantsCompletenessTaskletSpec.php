@@ -27,7 +27,7 @@ class ComputeProductModelsDescendantsCompletenessTaskletSpec extends ObjectBehav
     ) {
         $this->setStepExecution($stepExecution);
         $stepExecution->getJobParameters()->willReturn($jobParameters);
-        $jobParameters->get('product_model_code')->willReturn('tshirt_root');
+        $jobParameters->get('product_model_codes')->willReturn(['tshirt_root']);
 
         $productModelRepository->findOneByIdentifier('tshirt_root')->willReturn($productModel);
         $productModelDescendantsSaver->save($productModel);
