@@ -3,6 +3,7 @@
 namespace Pim\Bundle\CatalogBundle\Doctrine\ORM\Repository;
 
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\AST\Join;
 use Pim\Component\Catalog\Model\ProductModelInterface;
 use Pim\Component\Catalog\Model\VariantProduct;
 use Pim\Component\Catalog\Repository\ProductModelRepositoryInterface;
@@ -104,14 +105,16 @@ class ProductModelRepository extends EntityRepository implements ProductModelRep
     /**
      * {@inheritdoc}
      */
-    public function findChildrenProducts(ProductModelInterface $productModel): array
+    public function findDescendantProductIdentifiers($productModel): array
     {
         $qb = $this
             ->_em
             ->createQueryBuilder()
-            ->select('p')
+            ->select('p.identifier')
             ->from(VariantProduct::class, 'p')
+            ->innerJoin('p.parent', 'pm', 'WITH', 'p.parent = pm.code')
             ->where('p.parent = :parent')
+            ->orWhere('pm.code = :parent')
             ->setParameter('parent', $productModel);
 
         return $qb->getQuery()->execute();

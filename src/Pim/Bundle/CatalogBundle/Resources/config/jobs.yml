@@ -1,6 +1,5 @@
 parameters:
     pim_catalog.tasklet.compute_product_models_descendants_completeness.class: Pim\Component\Catalog\Job\ComputeProductModelsDescendantsCompletenessTasklet
-    pim_catalog.tasklet.recursive_compute_product_models_descendants_completeness.class: Pim\Component\Catalog\Job\RecursiveComputeProductModelsDescendantsCompletenessTasklet
 
     pim_catalog.compute_product_models_descendants_completeness.job_type: 'compute_product_models_descendants_completeness'
     pim_catalog.compute_product_models_descendants_completeness.job_name: 'compute_product_models_descendants_completeness'
@@ -16,21 +15,13 @@ services:
             - '@pim_catalog.saver.product_model_descendants'
         public: false
 
-    # This tasklet saves only descendants that are products
-    pim_catalog.tasklet.recursive_compute_product_models_descendants_completeness:
-        class: '%pim_catalog.tasklet.recursive_compute_product_models_descendants_completeness.class%'
-        arguments:
-            - '@pim_catalog.repository.product_model'
-            - '@pim_catalog.saver.product'
-        public: false
-
     pim_catalog.step.compute_product_models_descendants_completeness:
         class: '%pim_connector.step.tasklet.class%'
         arguments:
             - '%pim_catalog.compute_product_models_descendants_completeness.tasklet_name%'
             - '@event_dispatcher'
             - '@akeneo_batch.job_repository'
-            - '@pim_catalog.tasklet.recursive_compute_product_models_descendants_completeness'
+            - '@pim_catalog.tasklet.compute_product_models_descendants_completeness'
         public: false
 
     pim_catalog.job.compute_product_models_descendants_completeness:

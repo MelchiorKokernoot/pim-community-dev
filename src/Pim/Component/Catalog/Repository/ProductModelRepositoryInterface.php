@@ -52,12 +52,5 @@ interface ProductModelRepositoryInterface extends
      */
     public function findChildrenProductModels(ProductModelInterface $productModel): array;
 
-    /**
-     * Find variant products which are the direct children of the given $productModel
-     *
-     * @param ProductModelInterface $productModel
-     *
-     * @return array
-     */
-    public function findChildrenProducts(ProductModelInterface $productModel): array;
+    public function findDescendantProductIdentifiers($productModel): array;
 }
