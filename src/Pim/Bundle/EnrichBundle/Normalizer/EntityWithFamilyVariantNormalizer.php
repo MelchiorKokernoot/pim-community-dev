@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Pim\Bundle\EnrichBundle\Normalizer;
 
 use Pim\Component\Catalog\AttributeTypes;
@@ -13,6 +15,13 @@ use Pim\Component\Catalog\Repository\LocaleRepositoryInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
+ * Normalizer for entities with family variant, such as VariantProducts and ProductModels.
+ * It only returns some properties of these entities, helpful for some display on the front side.
+ *
+ * To fully normalize a Product or a ProductModel, please use either
+ * {@see \Pim\Bundle\EnrichBundle\Normalizer\ProductNormalizer} or
+ * {@see \Pim\Bundle\EnrichBundle\Normalizer\ProductModelNormalizer}
+ *
  * @author    Adrien Pétremann <adrien.petremann@akeneo.com>
  * @copyright 2017 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -124,12 +133,6 @@ class EntityWithFamilyVariantNormalizer implements NormalizerInterface
      *      'en_US' => 'Yellow, XL',
      * ]
      *
-     * Other example:
-     * [
-     *      'fr_FR' => '12 CENTIMETER, Plastique',
-     *      'en_US' => '12 CENTIMETER, Plastic',
-     * ]
-     *
      * @param EntityWithFamilyVariantInterface $entity
      * @param array                            $localeCodes
      *
@@ -163,6 +166,8 @@ class EntityWithFamilyVariantNormalizer implements NormalizerInterface
     }
 
     /**
+     * Get completeness of the given $entity, whether it's a ProductModel or a VariantProduct.
+     *
      * @param EntityWithFamilyVariantInterface $entity
      *
      * @return array
@@ -170,6 +175,7 @@ class EntityWithFamilyVariantNormalizer implements NormalizerInterface
     private function getCompletenessDependingOnEntity(EntityWithFamilyVariantInterface $entity): array
     {
         if ($entity instanceof ProductModelInterface) {
+            // TODO: replace this placeholder by the real values, with PIM-6560
             return [];
         }
 

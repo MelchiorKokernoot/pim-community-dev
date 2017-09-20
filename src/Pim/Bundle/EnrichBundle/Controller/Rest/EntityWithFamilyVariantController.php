@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Pim\Bundle\EnrichBundle\Controller\Rest;
 
 use Pim\Bundle\EnrichBundle\Normalizer\EntityWithFamilyVariantNormalizer;
@@ -36,6 +38,8 @@ class EntityWithFamilyVariantController
     }
 
     /**
+     * Return direct children (products or product models) of the parent's given identifier
+     *
      * @param Request $request
      *
      * @return JsonResponse

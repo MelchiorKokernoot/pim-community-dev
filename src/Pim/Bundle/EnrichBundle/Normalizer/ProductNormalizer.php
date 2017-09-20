@@ -353,7 +353,7 @@ class ProductNormalizer implements NormalizerInterface
         }
 
         throw new \LogicException(sprintf(
-            'This normalize does not support more than 2 levels of variation, %s given', $nbOfLevel
+            'This normalizer does not support more than 2 levels of variation, %s given', $nbOfLevel
         ));
     }
 }
